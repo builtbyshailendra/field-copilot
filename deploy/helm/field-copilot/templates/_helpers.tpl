@@ -32,6 +32,7 @@ securityContext:
 {{/* The API pod spec, shared by the Deployment and the Argo Rollout. */}}
 {{- define "fc.apiPodSpec" -}}
 {{ include "fc.podSecurity" . }}
+serviceAccountName: {{ .Values.serviceAccount.name }}
 containers:
   - name: api
     image: {{ include "fc.image" (dict "root" . "name" "api") | quote }}

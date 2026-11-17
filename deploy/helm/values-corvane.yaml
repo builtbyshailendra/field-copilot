@@ -1,6 +1,7 @@
-# Corvane Freight: runs inside Corvane's own AWS account (data residency). The model is
-# reached through Amazon Bedrock over a private VPC endpoint (see deploy/terraform), the
-# database is RDS with pgvector, and the copilot reads the cluster with a read-only role.
+# Corvane Freight: runs inside Corvane's own AWS account (deploy/terraform/aws). The model is
+# Claude in Amazon Bedrock, called with the pod's own AWS role (EKS Pod Identity); the
+# database is RDS with pgvector; the investigator reads the freight namespace and may only
+# patch Deployments there for actions a person approved. See docs/deployment-options.md.
 # Bumped by the release pull request; the cluster's Kyverno policy only admits images
 # signed by this repository's release workflow and pins them to their digest.
 image:
@@ -17,6 +18,7 @@ api:
     APP_ENV: prod
 rollouts: {enabled: true, canaryWeight: 25, minQuality: 0.8}
 postgres: {enabled: false}
+clusterAccess: {enabled: true, namespace: freight, allowActions: true}
 secrets: {existingSecret: field-copilot-corvane}   # synced from AWS Secrets Manager by External Secrets
 hpa: {enabled: true, minReplicas: 3, maxReplicas: 8, cpu: 65}
 serviceMonitor: {enabled: true}

@@ -105,3 +105,25 @@ def test_streaming_with_tools_is_refused_up_front():
     prov, _ = provider()
     with pytest.raises(LLMBadRequest):
         list(prov.stream(req(tools=[TOOL]), "claude-opus-5-5"))
+
+
+def test_bedrock_mode_uses_prefixed_models_and_no_server_fallbacks(monkeypatch):
+    from fieldcopilot.llm import BEDROCK_MODELS, build_llm
+    from fieldcopilot.llm.pricing import cost_usd
+    from fieldcopilot.llm.types import Usage
+
+    assert BEDROCK_MODELS["strong"] == ["anthropic.claude-opus-5-5", "anthropic.claude-sonnet-5-5"]
+    params = build_params(LLMRequest(purpose="answer", system="s", messages=[{"role": "user", "content": "hi"}]), "anthropic.claude-opus-5-5")
+    assert "fallbacks" not in params and "betas" not in params  # not offered on Bedrock
+    usage = Usage(input_tokens=1000, output_tokens=100)
+    assert cost_usd("anthropic.claude-opus-5-5", usage) == cost_usd("claude-opus-5-5", usage) > 0
+
+    monkeypatch.delenv("AWS_REGION", raising=False)
+    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
+    with pytest.raises(ValueError, match="AWS_REGION"):
+        build_llm("bedrock")
+    monkeypatch.setenv("AWS_REGION", "ap-south-1")
+    llm = build_llm("bedrock")
+    assert llm.provider.name == "bedrock"
+    assert str(llm.provider.client.base_url).startswith("https://bedrock-mantle.ap-south-1.api.aws")
+    assert llm.models["fast"][0] == "anthropic.claude-haiku-5-5"

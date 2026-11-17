@@ -46,3 +46,17 @@ def test_executed_actions_may_be_reported():
 def test_red_team_suite_passes_on_every_layer():
     failures = [c for c in run_all() if not c.passed]
     assert failures == [], failures
+
+
+def test_tool_output_filter_redacts_secrets_before_the_model_sees_them():
+    from fieldcopilot.guard import tool_output_filter
+
+    log = ("12:01 shipment-api connecting to postgres://app:hunter2@db:5432/ship\n"
+           "12:02 retry with api_key=sk-ant-api03-abcdefghijklmnop failed")
+    text, flags = tool_output_filter(log)
+    assert "hunter2" not in text and "sk-ant-api03" not in text
+    assert "shipment-api" in text and "12:02" in text  # the evidence around the secret survives
+    assert any(f.startswith("secret_redacted:") for f in flags)
+    assert "possible_injection" not in flags
+    clean, none = tool_output_filter("pod shipment-api-7f9 OOMKilled, restarts=4")
+    assert none == [] and "OOMKilled" in clean

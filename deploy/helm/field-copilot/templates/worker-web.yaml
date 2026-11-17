@@ -11,6 +11,7 @@ spec:
     metadata: {labels: {app: {{ include "fc.name" . }}-worker}}
     spec:
       {{- include "fc.podSecurity" . | nindent 6 }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
         - name: worker
           image: {{ include "fc.image" (dict "root" . "name" "api") | quote }}
@@ -40,6 +41,7 @@ spec:
     metadata: {labels: {app: {{ include "fc.name" . }}-web}}
     spec:
       {{- include "fc.podSecurity" . | nindent 6 }}
+      automountServiceAccountToken: false
       containers:
         - name: web
           image: {{ include "fc.image" (dict "root" . "name" "web") | quote }}

@@ -1,0 +1,41 @@
+{{- if .Values.clusterAccess.enabled }}
+# Corvane's investigator reads one namespace with kubectl. Read-only by default; with
+# allowActions, the actions a human approved in the copilot (rollback, restart, scale)
+# can patch Deployments there, and nothing else.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "fc.name" . }}-investigator
+  namespace: {{ .Values.clusterAccess.namespace }}
+  labels: {{- include "fc.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: [pods, pods/log, events, configmaps]
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [deployments, replicasets]
+    verbs: [get, list, watch]
+  {{- if .Values.clusterAccess.allowActions }}
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: [patch]
+  - apiGroups: [apps]
+    resources: [deployments/scale]
+    verbs: [get, patch, update]
+  {{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "fc.name" . }}-investigator
+  namespace: {{ .Values.clusterAccess.namespace }}
+  labels: {{- include "fc.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "fc.name" . }}-investigator
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

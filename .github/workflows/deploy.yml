@@ -31,6 +31,22 @@ jobs:
           python -c "import yaml; d=yaml.safe_load(open('deploy/observability/prometheus-rules.yaml')); yaml.safe_dump(d['spec'], open('/tmp/rules.yaml','w'))"
           docker run --rm -v /tmp:/w --entrypoint promtool prom/prometheus:v2.55.1 check rules /w/rules.yaml
 
+  terraform:
+    name: Terraform for AWS (validate and tests, no account needed)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deploy/terraform/aws
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hashicorp/setup-terraform@v3
+        with: {terraform_version: "1.17.1"}
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+      - name: terraform test (mocked AWS provider)
+        run: terraform test
+
   kind-canary:
     name: build images, deploy to kind, eval-gated canary drill
     runs-on: ubuntu-latest

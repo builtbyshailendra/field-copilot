@@ -4,14 +4,15 @@ Pick the backend with FIELD_LLM_MODE:
 - fake: a scripted FakeProvider (tests, CI, local dev)
 - recorded: replay saved responses from FIELD_RECORDINGS (free, deterministic)
 - record: call Claude and save every response
-- anthropic: call Claude
+- anthropic: call Claude (Claude API)
+- bedrock: call Claude in Amazon Bedrock in AWS_REGION (anthropic.-prefixed model IDs)
 """
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-from fieldcopilot.llm.client import FAKE_MODELS, REAL_MODELS, LLM, Budget, CallRecord
+from fieldcopilot.llm.client import BEDROCK_MODELS, FAKE_MODELS, REAL_MODELS, LLM, Budget, CallRecord
 from fieldcopilot.llm.errors import (
     BudgetExceeded, LLMBadOutput, LLMBadRequest, LLMError, LLMRateLimited, LLMRefused, LLMTimeout, LLMUnavailable,
 )
@@ -35,6 +36,10 @@ def build_llm(mode: str | None = None, fake: FakeProvider | None = None, recordi
         return LLM(RecordingProvider(AnthropicProvider(), root), models=dict(REAL_MODELS))
     if mode == "anthropic":
         return LLM(AnthropicProvider(), models=dict(REAL_MODELS))
+    if mode == "bedrock":
+        from fieldcopilot.llm.providers.anthropic import bedrock_provider
+
+        return LLM(bedrock_provider(), models=dict(BEDROCK_MODELS))
     raise ValueError(f"unknown FIELD_LLM_MODE {mode!r}")
 
 
@@ -42,5 +47,5 @@ __all__ = [
     "LLM", "Budget", "CallRecord", "build_llm", "FakeProvider", "Scripted", "RecordedProvider", "RecordingProvider",
     "LLMRequest", "LLMResponse", "StreamEvent", "ToolCall", "ToolSpec", "Usage",
     "LLMError", "LLMTimeout", "LLMRateLimited", "LLMUnavailable", "LLMRefused", "LLMBadRequest", "LLMBadOutput",
-    "BudgetExceeded", "FAKE_MODELS", "REAL_MODELS",
+    "BudgetExceeded", "FAKE_MODELS", "REAL_MODELS", "BEDROCK_MODELS",
 ]

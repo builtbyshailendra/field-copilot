@@ -51,6 +51,16 @@ secrets:
   demoPassword: demo-password
   anthropicApiKey: ""
 
+serviceAccount:
+  name: field-copilot             # EKS Pod Identity maps this name to the copilot's AWS role
+  annotations: {}
+
+# Corvane's investigator reads a live cluster with kubectl (FIELD_CLUSTER=kube).
+clusterAccess:
+  enabled: false
+  namespace: freight              # the one namespace it may read
+  allowActions: false             # let approved rollbacks, restarts and scaling patch Deployments there
+
 hpa: {enabled: false, minReplicas: 2, maxReplicas: 6, cpu: 70}
 pdb: {enabled: true}
 networkPolicy: {enabled: true}

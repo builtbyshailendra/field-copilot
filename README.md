@@ -260,6 +260,15 @@ Checked on my machine: `helm lint` and `helm template` for the demo, canary and 
 
 Checked on my machine: a script that walks every pod template the chart renders (demo, canary, both customers) against the same rules found no violations. Trivy, Syft, cosign and the Kyverno CLI aren't installed here, so those steps run only in CI. The GitHub Actions are pinned to version tags, not commit SHAs; pinning to SHAs is on the list before a real customer pilot.
 
+### Step 22: the customer's own AWS account, and Claude in Amazon Bedrock
+- **Bedrock mode** (`FIELD_LLM_MODE=bedrock`): the same provider code, with the Bedrock client (`AnthropicBedrockMantle`) and `anthropic.`-prefixed model IDs. There's no default region, so a deployment can't land in the wrong one by accident. Bedrock has no server-side refusal fallback; the reliability layer's model chain covers that already.
+- **Terraform** (`deploy/terraform/aws`): a private VPC with flow logs, interface endpoints for STS, EKS auth, Secrets Manager, KMS, logs and ECR, and an S3 gateway endpoint. EKS with **no public API endpoint** (Argo CD pulls from inside) and secrets encrypted with the customer's KMS key; nodes require IMDSv2 with hop limit 1. **EKS Pod Identity** gives the copilot one role, which can only call the listed Claude models (`bedrock-mantle:CreateInference`) and read its own secret. RDS PostgreSQL 16 for pgvector: private, encrypted, TLS required, admin password kept by RDS in Secrets Manager. And a monthly budget with alerts.
+- **Chart:** a service account for the Pod Identity binding, and a Role that lets Corvane's investigator read one namespace. Patching Deployments there is a separate switch, used only for actions a person approved. The API image now ships kubectl, pinned and checked against its published SHA-256.
+- **A gap found while writing the data-residency doc:** secrets in tool output (a log line with a password, say) reached the model unredacted. Redaction only ran on the audit log, logs and feedback. Now every tool result is redacted for secrets before the model sees it. Evidence checks still pass on all 13 incidents, and every eval gate is unchanged.
+- **Docs:** `docs/deployment-options.md` (four deployment shapes, where each kind of data lives, what leaves the VPC, cost drivers, decisions to take to the customer) and decision 0006 on where each customer's model runs. That includes a real catch: in Mumbai, Claude in Amazon Bedrock only lists the global endpoint, so inference can be routed outside India. That goes to Corvane's security team as a choice.
+
+Checked on my machine: `terraform fmt`, `validate`, and `terraform test` with a **mocked AWS provider**. Three runs assert the private API endpoint, a private encrypted database, no automatic public IPs, IMDSv2, a copilot role with no wildcard actions limited to the listed models, and the NAT layout. It also passes my own iac-check-kit project (no public buckets, no SSH open to the internet). Nothing has been applied to a real AWS account, and the model ARNs are left for the customer to fill in from AWS's documentation.
+
 ## Licence
 
 MIT

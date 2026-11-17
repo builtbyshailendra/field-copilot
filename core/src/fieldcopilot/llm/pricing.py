@@ -34,7 +34,9 @@ PRICES: dict[str, Price] = {
 
 
 def cost_usd(model: str, usage: Usage) -> float:
-    price = PRICES.get(model)
+    # Bedrock IDs ("anthropic.claude-opus-5-5") are priced at the same list rates here; AWS
+    # bills them, and regional endpoints can cost more, so check the AWS price list for a quote.
+    price = PRICES.get(model) or PRICES.get(model.removeprefix("anthropic."))
     if price is None:
         return 0.0
     total = (

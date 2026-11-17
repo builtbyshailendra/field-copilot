@@ -10,7 +10,8 @@ Design choices (each one is tested against a stub client in tests/test_anthropic
 - The system prompt carries a cache breakpoint: it is the stable prefix of every call
   for a tenant, so repeat calls read it from cache.
 - Server-side refusal fallback is on for the models that support it; a final refusal
-  raises LLMRefused.
+  raises LLMRefused. On Amazon Bedrock server-side fallbacks don't exist, so the
+  reliability layer's own model chain handles refusals there (see bedrock_provider()).
 - Tools are sent with strict: true so arguments always match their schema.
 - The whole assistant turn is kept (thinking and fallback blocks included) so it can be
   sent back unchanged on the next turn of a tool loop.
@@ -106,8 +107,10 @@ def map_error(error: Exception) -> Exception:
 class AnthropicProvider:
     name = "anthropic"
 
-    def __init__(self, client: Any | None = None, timeout: float = 60.0):
+    def __init__(self, client: Any | None = None, timeout: float = 60.0, name: str | None = None):
         self.client = client or anthropic.Anthropic(timeout=timeout, max_retries=0)
+        if name:
+            self.name = name
 
     def complete(self, request: LLMRequest, model: str) -> LLMResponse:
         params = build_params(request, model)
@@ -137,3 +140,20 @@ class AnthropicProvider:
         response = parse_message(message, model)
         response.latency_ms = (time.perf_counter() - started) * 1000
         yield StreamEvent("final", response=response)
+
+
+def bedrock_provider(region: str | None = None, timeout: float = 60.0, client: Any | None = None) -> AnthropicProvider:
+    """Claude in Amazon Bedrock (the Messages API on bedrock-mantle.<region>.api.aws).
+
+    Same request shape as the Claude API, with `anthropic.`-prefixed model IDs (BEDROCK_MODELS
+    in llm/client.py), AWS credentials from the usual chain (IRSA or the task role in a
+    cluster), and the region pinned explicitly so data stays where the customer contracted.
+    """
+    import os
+
+    region = region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
+    if not region:
+        raise ValueError("FIELD_LLM_MODE=bedrock needs AWS_REGION; there is deliberately no default region")
+    if client is None:
+        client = anthropic.AnthropicBedrockMantle(aws_region=region, timeout=timeout, max_retries=0)
+    return AnthropicProvider(client=client, name="bedrock")

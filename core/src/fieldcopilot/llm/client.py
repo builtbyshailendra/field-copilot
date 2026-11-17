@@ -30,6 +30,10 @@ REAL_MODELS: dict[ModelRole, list[str]] = {
     "strong": ["claude-opus-5-5", "claude-sonnet-5-5"],
     "fast": ["claude-haiku-5-5", "claude-sonnet-5-5"],
 }
+# Claude in Amazon Bedrock uses the same models under `anthropic.`-prefixed IDs.
+BEDROCK_MODELS: dict[ModelRole, list[str]] = {
+    role: [f"anthropic.{model}" for model in chain] for role, chain in REAL_MODELS.items()
+}
 FAKE_MODELS: dict[ModelRole, list[str]] = {"strong": ["fake-strong"], "fast": ["fake-fast"]}
 
 
