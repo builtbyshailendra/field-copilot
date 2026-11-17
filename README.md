@@ -49,6 +49,13 @@ Structured output takes a Pydantic model, validates the reply, and gets one repa
 
 33 tests, all on the fake model or a stub client. What they can't show is answer quality; that waits for an API key and the recorded evaluations.
 
+### Step 3: prompts as versioned files, and a harness to measure them
+Prompts live in YAML (`core/src/fieldcopilot/prompts/library/`), with their model role, effort and token limit. A prompt's version is a hash of its content, so every result names the exact prompt behind it. A customer pack can override a prompt for its tenant only. Templates use `{{name}}` and a missing variable is an error.
+
+The prompt lab (`python -m fieldcopilot.prompts.lab route`) runs every version of a prompt over the same labelled set (36 routing questions, 4 marked tricky) and prints one table: accuracy, accuracy on the tricky ones, cost, p50/p95 latency, errors. The first experiment adds one worked example per route.
+
+On the fake model both versions score 94%, because the fake is a keyword rule that doesn't read prompts. That run proves the harness, not the prompt. It did show one real thing: the version with examples costs about 40% more input tokens per call, which the real comparison has to justify.
+
 ## Licence
 
 MIT
