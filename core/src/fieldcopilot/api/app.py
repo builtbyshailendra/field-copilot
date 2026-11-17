@@ -187,9 +187,14 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
                 llm: LLM = llm_factory()
                 approvals = approvals_for(user.tenant)
                 copilot = copilot_factory(user.tenant, llm, approvals)
+                def describe(step) -> str:
+                    if step.kind == "model":
+                        calls = step.detail.get("tool_calls") or []
+                        return f"asks for: {', '.join(calls)}" if calls else "writes the answer"
+                    return json.dumps(step.detail.get("args", {}))[:200]
+
                 copilot.s.agent.on_step = lambda step: events.put(("step", {
-                    "index": step.index, "kind": step.kind, "name": step.name,
-                    "summary": step.detail.get("text") or json.dumps(step.detail.get("args", {}))[:200]}))
+                    "index": step.index, "kind": step.kind, "name": step.name, "summary": describe(step)}))
                 route = copilot.route(body.message) if body.mode == "auto" else "supervised"
                 events.put(("route", {"route": route}))
                 reply = copilot._dispatch(route, body.message, body.session_id, _budget()) if body.mode == "auto" \

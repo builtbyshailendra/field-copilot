@@ -211,6 +211,22 @@ FastAPI service (`core/src/fieldcopilot/api/`), tested against real PostgreSQL l
 
 What broke: redacting the audit payload as one JSON string let the password pattern swallow the closing `"}` and broke the JSON. Redaction now walks the structure and redacts each value.
 
+### Step 17: the web app
+Next.js 16 app (`web/`) behind one origin: the browser only talks to Next.js, which passes `/api/*` to the copilot API, so the session cookie stays first-party.
+- **Ask:** the answer streams in. On the right, each agent step appears as it happens ("asks for: get_logs, query_metrics", then each tool). Grounded answers show every claim with its checked quote and source; investigations show ranked causes with their evidence; case reviews show each criterion as met / not met / unknown with the quote. Pending approvals are linked, with "Nothing has run". Thumbs up or down feeds Step 13's loop.
+- **Approvals:** the exact action or letter, a reason field that goes to the audit log, approve or reject. An engineer without the on-call lead role gets the API's refusal.
+- **Runs** with a **trace viewer** (every step, tool arguments and outputs), **Evaluations** (the latest suite), **Prompts** (versions in use).
+
+Three Playwright tests drive it in a real browser against the real API and PostgreSQL: an engineer investigates, is refused when trying to approve, the on-call lead approves, and the nurse can't see it; a nurse gets a cited policy answer and its trace; a request to approve a case is refused. CI runs them too.
+
+| Investigation | Case review | The letter the nurse approves |
+|---|---|---|
+| ![](docs/screenshots/1-investigation.jpg) | ![](docs/screenshots/2-case-review.jpg) | ![](docs/screenshots/3-approval-letter.jpg) |
+
+(Screenshots from the local app on the fake model; synthetic data.)
+
+What broke: Next.js renders its own empty `role="alert"` route announcer, so the first test matched two alerts; it now filters by text. And model steps showed a bare `{}` in the progress list until I made them say which tools the model asked for.
+
 ## Licence
 
 MIT
