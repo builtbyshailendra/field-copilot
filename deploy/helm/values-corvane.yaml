@@ -1,9 +1,11 @@
 # Corvane Freight: runs inside Corvane's own AWS account (data residency). The model is
 # reached through Amazon Bedrock over a private VPC endpoint (see deploy/terraform), the
 # database is RDS with pgvector, and the copilot reads the cluster with a read-only role.
+# Bumped by the release pull request; the cluster's Kyverno policy only admits images
+# signed by this repository's release workflow and pins them to their digest.
 image:
-  api: {tag: "REPLACE_WITH_RELEASE_SHA"}
-  web: {tag: "REPLACE_WITH_RELEASE_SHA"}
+  api: {tag: "0.1.0"}
+  web: {tag: "0.1.0"}
 api:
   replicas: 3
   env:

@@ -1,0 +1,70 @@
+# Admission policies for a customer cluster (Kyverno). The chart is written to pass them;
+# CI renders the chart and checks it with `kyverno apply`, and `kyverno test` checks the
+# policies themselves against a good and a bad pod (deploy/policies/tests).
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: field-copilot-pod-security
+  annotations:
+    policies.kyverno.io/title: Restricted pod security for field-copilot
+    policies.kyverno.io/description: >-
+      Pods run as non-root with the default seccomp profile, cannot escalate privileges,
+      drop every Linux capability and have a read-only root filesystem.
+spec:
+  background: true
+  rules:
+    - name: run-as-non-root
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Pods must set securityContext.runAsNonRoot to true, and containers must not override it.
+        pattern:
+          spec:
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - =(securityContext):
+                  =(runAsNonRoot): true
+    - name: default-seccomp
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Pods must use the RuntimeDefault or a Localhost seccomp profile.
+        pattern:
+          spec:
+            securityContext:
+              seccompProfile:
+                type: "RuntimeDefault | Localhost"
+    - name: disallow-privilege-escalation
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Containers must set securityContext.allowPrivilegeEscalation to false.
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: "false"
+    - name: drop-all-capabilities
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Containers must drop ALL capabilities.
+        foreach:
+          - list: request.object.spec.containers
+            deny:
+              conditions:
+                all:
+                  - key: ALL
+                    operator: AnyNotIn
+                    value: "{{ element.securityContext.capabilities.drop[].to_upper(@) || `[]` }}"
+    - name: read-only-root-filesystem
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Containers must have a read-only root filesystem; mount an emptyDir where they need to write.
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  readOnlyRootFilesystem: true

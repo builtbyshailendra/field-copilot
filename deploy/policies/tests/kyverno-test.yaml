@@ -1,0 +1,27 @@
+# kyverno test deploy/policies/tests
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: field-copilot-policies
+policies:
+  - ../pod-security.yaml
+  - ../images-and-resources.yaml
+resources:
+  - resources.yaml
+results:
+  - {policy: field-copilot-pod-security, rule: run-as-non-root, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-pod-security, rule: run-as-non-root, kind: Pod, resources: [bad-pod], result: fail}
+  - {policy: field-copilot-pod-security, rule: default-seccomp, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-pod-security, rule: default-seccomp, kind: Pod, resources: [bad-pod], result: fail}
+  - {policy: field-copilot-pod-security, rule: disallow-privilege-escalation, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-pod-security, rule: disallow-privilege-escalation, kind: Pod, resources: [bad-pod], result: fail}
+  - {policy: field-copilot-pod-security, rule: drop-all-capabilities, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-pod-security, rule: drop-all-capabilities, kind: Pod, resources: [bad-pod], result: fail}
+  - {policy: field-copilot-pod-security, rule: read-only-root-filesystem, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-pod-security, rule: read-only-root-filesystem, kind: Pod, resources: [bad-pod], result: fail}
+  - {policy: field-copilot-images, rule: allowed-registries, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-images, rule: allowed-registries, kind: Pod, resources: [bad-pod], result: fail}
+  - {policy: field-copilot-images, rule: disallow-latest-tag, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-images, rule: disallow-latest-tag, kind: Pod, resources: [bad-pod, untagged-pod], result: fail}
+  - {policy: field-copilot-images, rule: require-requests-and-limits, kind: Pod, resources: [good-api], result: pass}
+  - {policy: field-copilot-images, rule: require-requests-and-limits, kind: Pod, resources: [bad-pod], result: fail}

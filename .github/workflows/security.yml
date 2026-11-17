@@ -1,0 +1,59 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"   # weekly, so new CVEs in unchanged dependencies still show up
+
+permissions:
+  contents: read
+
+jobs:
+  dependencies:
+    name: dependency vulnerabilities and secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - name: Python dependencies (pip-audit against the resolved install)
+        run: |
+          python -m venv /tmp/audit
+          /tmp/audit/bin/pip install -q -e "core[rag,agents,api]" pip-audit
+          /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off
+      - name: Web dependencies, secrets and IaC/Dockerfile misconfigurations (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          skip-dirs: core/evals/results,deploy/policies/tests,web/node_modules
+          exit-code: "1"
+
+  policies:
+    name: admission policies (Kyverno)
+    runs-on: ubuntu-latest
+    env:
+      KYVERNO_VERSION: v1.13.4
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+      - name: Install the Kyverno CLI
+        run: |
+          curl -sSL "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" | tar xz kyverno
+          sudo mv kyverno /usr/local/bin/
+      - name: The policies do what they say (good and bad pods)
+        run: kyverno test deploy/policies/tests
+      - name: The chart passes its own policies (demo and both customers)
+        run: |
+          helm template demo deploy/helm/field-copilot > /tmp/demo.yaml
+          helm template corvane deploy/helm/field-copilot -f deploy/helm/values-corvane.yaml > /tmp/corvane.yaml
+          helm template tallowmere deploy/helm/field-copilot -f deploy/helm/values-tallowmere.yaml > /tmp/tallowmere.yaml
+          for f in demo corvane tallowmere; do
+            echo "== $f"
+            kyverno apply deploy/policies/pod-security.yaml deploy/policies/images-and-resources.yaml --resource /tmp/$f.yaml
+          done

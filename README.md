@@ -252,6 +252,14 @@ The **startup self-check** runs in every pod in a few seconds without a model: r
 
 Checked on my machine: `helm lint` and `helm template` for the demo, canary and both customer configurations; and the smoke script against a healthy API (self-check 0.83, passes) and a broken one (0.48, fails with exit code 1), which are the two readings the analysis decides on. Docker isn't running on this laptop, so the image builds and the kind drill run only in CI.
 
+### Step 21: supply chain: scanned, signed, and only signed images admitted
+- **Release** (`.github/workflows/release.yml`, on a version tag): each image is built and **scanned with Trivy before it is pushed** (fixable HIGH or CRITICAL stops the release), then pushed to GHCR, given an **SPDX SBOM** (Syft), **signed keylessly with cosign** (the workflow's GitHub OIDC identity, logged in Rekor), the SBOM attached as a signed attestation, and GitHub build provenance added. The workflow then verifies the signature and attestation the same way the cluster will.
+- **Admission** (`deploy/policies/`, Kyverno): one policy admits only `field-copilot-*` images signed by that release workflow with a signed SBOM, and rewrites tags to the verified digest. Two more enforce restricted pod security (non-root, seccomp, no privilege escalation, drop ALL capabilities, read-only root filesystem) and image rules (allowed registries, no `latest`, CPU and memory requests and a memory limit).
+- **Policies are tested too:** `kyverno test` runs them against a good pod and two bad ones, and `kyverno apply` checks the rendered chart for the demo and both customers. Making the chart pass meant running the demo PostgreSQL as its own user with a read-only root filesystem, and giving the web image a numeric user so Kubernetes can verify it isn't root.
+- **Every push** (`.github/workflows/security.yml`, also weekly): pip-audit on the resolved Python dependencies; Trivy on the web lockfile, for committed secrets, and for Dockerfile and Kubernetes misconfigurations. Dependabot keeps pip, npm, Docker base images and GitHub Actions current.
+
+Checked on my machine: a script that walks every pod template the chart renders (demo, canary, both customers) against the same rules found no violations. Trivy, Syft, cosign and the Kyverno CLI aren't installed here, so those steps run only in CI. The GitHub Actions are pinned to version tags, not commit SHAs; pinning to SHAs is on the list before a real customer pilot.
+
 ## Licence
 
 MIT

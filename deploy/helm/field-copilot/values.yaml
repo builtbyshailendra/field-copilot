@@ -1,9 +1,11 @@
 # Defaults run a self-contained demo (fake model, in-chart PostgreSQL). Customer
 # deployments override these in values-<tenant>.yaml (managed database, real model,
 # data-residency settings).
+# Tag defaults to the chart's appVersion; never "latest" (the admission policies reject it).
+# Set a digest to pin exactly what was signed; Kyverno also rewrites tags to verified digests.
 image:
-  api: {repository: ghcr.io/builtbyshailendra/field-copilot-api, tag: latest, pullPolicy: IfNotPresent}
-  web: {repository: ghcr.io/builtbyshailendra/field-copilot-web, tag: latest, pullPolicy: IfNotPresent}
+  api: {repository: ghcr.io/builtbyshailendra/field-copilot-api, tag: "", digest: "", pullPolicy: IfNotPresent}
+  web: {repository: ghcr.io/builtbyshailendra/field-copilot-web, tag: "", digest: "", pullPolicy: IfNotPresent}
 
 api:
   replicas: 2
@@ -39,6 +41,9 @@ postgres:
   enabled: true                   # demo only; customers use a managed database via secrets.existingSecret
   image: postgres:16
   password: demo-postgres-password
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 512Mi}
 
 secrets:
   existingSecret: ""              # holds FIELD_JWT_SECRET, FIELD_ADMIN_DSN, FIELD_APP_DSN, ANTHROPIC_API_KEY

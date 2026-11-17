@@ -13,7 +13,7 @@ spec:
       {{- include "fc.podSecurity" . | nindent 6 }}
       containers:
         - name: worker
-          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          image: {{ include "fc.image" (dict "root" . "name" "api") | quote }}
           imagePullPolicy: {{ .Values.image.api.pullPolicy }}
           command: ["python", "-m", "fieldcopilot.api.worker"]
           envFrom: [{secretRef: {name: {{ include "fc.secretName" . }}}}]
@@ -42,7 +42,7 @@ spec:
       {{- include "fc.podSecurity" . | nindent 6 }}
       containers:
         - name: web
-          image: "{{ .Values.image.web.repository }}:{{ .Values.image.web.tag }}"
+          image: {{ include "fc.image" (dict "root" . "name" "web") | quote }}
           imagePullPolicy: {{ .Values.image.web.pullPolicy }}
           ports: [{name: http, containerPort: 3100}]
           readinessProbe: {httpGet: {path: /login, port: http}, periodSeconds: 5}

@@ -1,0 +1,40 @@
+# Only images signed by this repository's release workflow (Sigstore keyless: GitHub OIDC
+# identity, recorded in the Rekor transparency log) and carrying a signed SPDX SBOM are
+# admitted. Tags are rewritten to the verified digest, so what runs is exactly what was signed.
+# Not covered by `kyverno test` in CI because verification needs the registry; checked with
+# `cosign verify` in the release workflow instead.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: field-copilot-verify-images
+  annotations:
+    policies.kyverno.io/title: Signed field-copilot images only
+spec:
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: signed-by-release-workflow
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      verifyImages:
+        - imageReferences: ["ghcr.io/builtbyshailendra/field-copilot-*"]
+          failureAction: Enforce
+          mutateDigest: true
+          verifyDigest: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subject: "https://github.com/builtbyshailendra/field-copilot/.github/workflows/release.yml@refs/tags/v*"
+                    rekor: {url: https://rekor.sigstore.dev}
+          attestations:
+            - type: https://spdx.dev/Document
+              attestors:
+                - entries:
+                    - keyless:
+                        issuer: https://token.actions.githubusercontent.com
+                        subject: "https://github.com/builtbyshailendra/field-copilot/.github/workflows/release.yml@refs/tags/v*"
+                        rekor: {url: https://rekor.sigstore.dev}
+              conditions:
+                - all:
+                    - key: "{{ spdxVersion }}"
+                      operator: Equals
+                      value: SPDX-2.3

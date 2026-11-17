@@ -1,8 +1,10 @@
 # Tallowmere Health Plan: PHI, so the model endpoint must be covered by a BAA, prompts carry
 # minimum-necessary data, and the copilot reads prior-auth-workbench with its own token.
+# Bumped by the release pull request; the cluster's Kyverno policy only admits images
+# signed by this repository's release workflow and pins them to their digest.
 image:
-  api: {tag: "REPLACE_WITH_RELEASE_SHA"}
-  web: {tag: "REPLACE_WITH_RELEASE_SHA"}
+  api: {tag: "0.1.0"}
+  web: {tag: "0.1.0"}
 api:
   replicas: 2
   env:

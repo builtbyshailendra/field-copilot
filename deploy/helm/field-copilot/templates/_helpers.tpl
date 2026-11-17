@@ -23,12 +23,18 @@ securityContext:
   capabilities: {drop: ["ALL"]}
 {{- end -}}
 
+{{/* Image reference: repository@digest if a digest is set, else repository:tag (default appVersion). */}}
+{{- define "fc.image" -}}
+{{- $img := index .root.Values.image .name -}}
+{{- if $img.digest -}}{{ $img.repository }}@{{ $img.digest }}{{- else -}}{{ $img.repository }}:{{ $img.tag | default .root.Chart.AppVersion }}{{- end -}}
+{{- end -}}
+
 {{/* The API pod spec, shared by the Deployment and the Argo Rollout. */}}
 {{- define "fc.apiPodSpec" -}}
 {{ include "fc.podSecurity" . }}
 containers:
   - name: api
-    image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+    image: {{ include "fc.image" (dict "root" . "name" "api") | quote }}
     imagePullPolicy: {{ .Values.image.api.pullPolicy }}
     ports: [{name: http, containerPort: 8020}]
     envFrom: [{secretRef: {name: {{ include "fc.secretName" . }}}}]

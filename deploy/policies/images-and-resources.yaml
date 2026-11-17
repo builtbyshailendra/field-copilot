@@ -1,0 +1,45 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: field-copilot-images
+  annotations:
+    policies.kyverno.io/title: Image sources, tags and resources for field-copilot
+    policies.kyverno.io/description: >-
+      Images come from the project's registry (or the official PostgreSQL image for the demo
+      database), carry an explicit tag that is not "latest", and every container declares
+      CPU and memory requests and a memory limit.
+spec:
+  background: true
+  rules:
+    - name: allowed-registries
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Images must come from ghcr.io/builtbyshailendra (or postgres for the demo database).
+        pattern:
+          spec:
+            containers:
+              - image: "ghcr.io/builtbyshailendra/* | postgres:*"
+    - name: disallow-latest-tag
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Images need an explicit tag or digest, and "latest" is not allowed.
+        pattern:
+          spec:
+            containers:
+              - image: "*:* & !*:latest"
+    - name: require-requests-and-limits
+      match: {any: [{resources: {kinds: [Pod]}}]}
+      validate:
+        failureAction: Enforce
+        message: Containers must request CPU and memory and set a memory limit.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    memory: "?*"
