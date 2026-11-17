@@ -1,0 +1,22 @@
+id: s06-db-connections
+alert: "HighLatency: rate-quote p95 above 2s, several services slow"
+service: rate-quote
+truth: {cause: db_connections, action: scale, evidence: ["too many clients"]}
+deploys:
+  - {service: rate-quote, revision: 51, image: "rate-quote:5.1.2", minutes_ago: 6000, by: ci}
+config_changes: []
+pods:
+  - {name: rate-quote-77c2-old01, service: rate-quote, revision: 51, status: Running, ready: true, restarts: 0}
+events:
+  - {minutes_ago: 30, object: horizontalpodautoscaler/rate-quote, reason: SuccessfulRescale, message: "New size: 20; reason: cpu resource utilization above target"}
+logs:
+  rate-quote-77c2-old01:
+    previous: []
+    current: ["WARN db pool exhausted, waiting for connection", "ERROR psycopg.OperationalError: FATAL: sorry, too many clients already"]
+metrics:
+  rate-quote:
+    latency_p95_ms: [300, 320, 1400, 3900, 4200]
+    error_rate_pct: [0.3, 0.3, 2.1, 6.4, 7.0]
+    ready_replicas: [8, 8, 20, 20, 20]
+  postgres-main:
+    db_connections: [180, 190, 400, 400, 400]

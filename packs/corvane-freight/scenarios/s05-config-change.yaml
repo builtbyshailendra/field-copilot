@@ -1,0 +1,21 @@
+id: s05-config-change
+alert: "KubePodCrashLooping: rate-quote new pods failing after node drain"
+service: rate-quote
+truth: {cause: config_change, action: revert_config, evidence: ["CARRIER_API_URL"]}
+deploys:
+  - {service: rate-quote, revision: 51, image: "rate-quote:5.1.2", minutes_ago: 6000, by: ci}
+config_changes:
+  - {minutes_ago: 180, object: configmap/rate-quote-config, change: "renamed key CARRIER_API_URL to CARRIER_URL", by: "gitops (commit 9f2e1c)"}
+pods:
+  - {name: rate-quote-77c2-old01, service: rate-quote, revision: 51, status: Running, ready: true, restarts: 0, age_minutes: 5000}
+  - {name: rate-quote-77c2-new01, service: rate-quote, revision: 51, status: CrashLoopBackOff, ready: false, restarts: 4, age_minutes: 14, last_state: {reason: Error, exit_code: 1}}
+events:
+  - {minutes_ago: 15, object: node/ip-10-0-3-17, reason: NodeDrain, message: "Node drained for maintenance"}
+logs:
+  rate-quote-77c2-new01:
+    previous: ["INFO rate-quote 5.1.2 starting", "ERROR required setting CARRIER_API_URL is not set", "INFO exiting with status 1"]
+    current: ["INFO rate-quote 5.1.2 starting"]
+metrics:
+  rate-quote:
+    error_rate_pct: [0.3, 0.3, 0.4, 1.9]
+    ready_replicas: [2, 2, 1, 1]

@@ -1,0 +1,22 @@
+id: s08-disk-pressure
+alert: "KubeNodeDiskPressure: pods evicted on ip-10-0-2-44"
+service: tracking-worker
+truth: {cause: disk_pressure, action: revert_config, evidence: ["DiskPressure"]}
+deploys:
+  - {service: tracking-worker, revision: 87, image: "tracking-worker:0.87.1", minutes_ago: 9000, by: ci}
+config_changes:
+  - {minutes_ago: 300, object: configmap/tracking-worker-config, change: "LOG_LEVEL changed from INFO to DEBUG", by: "gitops (commit 4b77aa)"}
+pods:
+  - {name: tracking-worker-5b8c-ccccc, service: tracking-worker, revision: 87, status: Evicted, ready: false, restarts: 0}
+  - {name: tracking-worker-5b8c-ddddd, service: tracking-worker, revision: 87, status: Running, ready: true, restarts: 0}
+events:
+  - {minutes_ago: 12, object: node/ip-10-0-2-44, reason: NodeHasDiskPressure, message: "Node ip-10-0-2-44 status is now: DiskPressure"}
+  - {minutes_ago: 11, object: pod/tracking-worker-5b8c-ccccc, reason: Evicted, message: "The node was low on resource: ephemeral-storage"}
+logs:
+  tracking-worker-5b8c-ddddd:
+    previous: []
+    current: ["DEBUG event payload: {...}", "DEBUG event payload: {...}", "DEBUG carrier response headers: {...}"]
+metrics:
+  tracking-worker:
+    node_disk_used_pct.ip-10-0-2-44: [61, 70, 82, 91, 96]
+    error_rate_pct: [0.1, 0.1, 0.2, 1.4, 2.0]

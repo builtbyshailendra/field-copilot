@@ -1,0 +1,20 @@
+id: s11-poison-message
+alert: "OrdersQueueLagHigh: partition 7 not advancing"
+service: orders-consumer
+truth: {cause: poison_message, action: none, evidence: ["msg-88412"]}
+deploys:
+  - {service: orders-consumer, revision: 30, image: "orders-consumer:3.0.4", minutes_ago: 12000, by: ci}
+config_changes: []
+pods:
+  - {name: orders-consumer-2b2b-c07, service: orders-consumer, revision: 30, status: Running, ready: true, restarts: 0}
+events: []
+logs:
+  orders-consumer-2b2b-c07:
+    previous: []
+    current: ["ERROR partition=7 offset=55120 id=msg-88412 failed: ValueError: weight_kg must be positive", "INFO retrying id=msg-88412 (attempt 41)", "ERROR partition=7 offset=55120 id=msg-88412 failed: ValueError: weight_kg must be positive", "INFO retrying id=msg-88412 (attempt 42)"]
+metrics:
+  orders-consumer:
+    queue_lag: [100, 400, 900, 1500, 2100]
+    error_rate_pct: [0.1, 0.9, 1.0, 1.0, 1.0]
+  carrier-gateway:
+    carrier_error_rate_pct.northwind: [0.5, 0.4, 0.5, 0.6, 0.5]

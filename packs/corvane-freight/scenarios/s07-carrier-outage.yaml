@@ -1,0 +1,22 @@
+id: s07-carrier-outage
+alert: "OrdersQueueLagHigh: orders-consumer lag above 5000 for 10m"
+service: orders-consumer
+truth: {cause: dependency_outage, action: flag, evidence: ["northwind"]}
+deploys:
+  - {service: orders-consumer, revision: 30, image: "orders-consumer:3.0.4", minutes_ago: 12000, by: ci}
+config_changes: []
+pods:
+  - {name: orders-consumer-2b2b-c01, service: orders-consumer, revision: 30, status: Running, ready: true, restarts: 0}
+  - {name: carrier-gateway-4c4c-g01, service: carrier-gateway, revision: 12, status: Running, ready: true, restarts: 0}
+events: []
+logs:
+  carrier-gateway-4c4c-g01:
+    previous: []
+    current: ["WARN carrier=northwind POST /v2/shipments timeout after 30000ms", "WARN carrier=northwind retry 3/5", "INFO carrier=swiftline POST /v2/shipments 201 in 180ms"]
+metrics:
+  orders-consumer:
+    queue_lag: [200, 900, 4800, 11000, 19000]
+    error_rate_pct: [0.1, 4.0, 22.0, 30.0, 31.0]
+  carrier-gateway:
+    carrier_error_rate_pct.northwind: [0.5, 40.0, 97.0, 99.0, 99.0]
+    carrier_error_rate_pct.swiftline: [0.4, 0.5, 0.4, 0.6, 0.5]

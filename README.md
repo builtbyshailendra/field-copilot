@@ -106,6 +106,17 @@ I wrote the loop myself rather than use an SDK runner, because the loop is where
 
 What broke: the fake model recorded a live reference to the message list, and the loop kept appending to it, so a test inspecting "what the model saw" saw the future. The fake now snapshots every request.
 
+### Step 8: Corvane's investigator, 13 incidents, and a real Kubernetes lab
+Thirteen frozen incidents (`packs/corvane-freight/scenarios/`), each a snapshot of deploy history, config changes, pods, events, logs and metrics, with the known cause and the right first action. They cover a bad release, a memory leak after a library bump, a stuck rollout, an image tag typo, a renamed config key, database connection exhaustion, a carrier outage, disk pressure from debug logging, an expired certificate, a liveness probe killing a slow service, a poison message, a false alarm, and a prompt injection hidden in a log line.
+
+Corvane's tools read from either backend with identical output: the scenario files, or a live cluster through `kubectl`. The investigator agent returns a ranked report; each hypothesis cites evidence as (tool call ID, exact excerpt), and the excerpt is checked against what that tool actually returned in this run. Actions are proposals that wait for the on-call lead.
+
+A rules baseline applies the runbooks' checks in a fixed order, with no model. It also plays the fake model, so it drives the real agent loop and tools.
+
+**Baseline on the 13 frozen scenarios:** cause ranked first 13/13, evidence verified 100%, right first action 13/13, unapproved actions 0. That number is *not* a result: I wrote the rules alongside the scenarios, so they fit by construction. It proves the loop, the tools, evidence checking and approvals work end to end, and it's the floor a model has to beat on harder, unseen incidents.
+
+The out-of-sample check is the **kind lab** (`lab/run_lab.py`, workflow `kubernetes-lab`): CI creates a real cluster, injects five failures (a crashing release, a bad image tag, an OOM kill, a failing readiness probe, a renamed ConfigMap key), investigates each from live `kubectl` output, checks the evidence, approves the proposed rollback, and waits for the service to recover. Writing it changed two rules: live clusters report `ErrImagePull` before `ImagePullBackOff` and `CreateContainerConfigError` rather than a crash loop, and "config changed after the last deploy" is a better rule than "no recent deploy", because in a lab everything was deployed a minute ago.
+
 ## Licence
 
 MIT

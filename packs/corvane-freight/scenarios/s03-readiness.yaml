@@ -1,0 +1,25 @@
+id: s03-readiness
+alert: "KubeDeploymentRolloutStuck: rate-quote has 2/4 updated replicas ready"
+service: rate-quote
+truth: {cause: readiness_failure, action: rollback, evidence: ["Readiness probe failed"]}
+deploys:
+  - {service: rate-quote, revision: 51, image: "rate-quote:5.1.2", minutes_ago: 6000, by: ci}
+  - {service: rate-quote, revision: 52, image: "rate-quote:5.2.0", minutes_ago: 25, by: ci, notes: "move health endpoints under /internal"}
+config_changes: []
+pods:
+  - {name: rate-quote-9a1b-new01, service: rate-quote, revision: 52, status: Running, ready: false, restarts: 0}
+  - {name: rate-quote-9a1b-new02, service: rate-quote, revision: 52, status: Running, ready: false, restarts: 0}
+  - {name: rate-quote-77c2-old01, service: rate-quote, revision: 51, status: Running, ready: true, restarts: 0}
+  - {name: rate-quote-77c2-old02, service: rate-quote, revision: 51, status: Running, ready: true, restarts: 0}
+events:
+  - {minutes_ago: 20, object: pod/rate-quote-9a1b-new01, reason: Unhealthy, message: "Readiness probe failed: HTTP probe failed with statuscode: 404 (GET /healthz/ready)"}
+  - {minutes_ago: 5, object: deployment/rate-quote, reason: ProgressDeadlineExceeded, message: "ReplicaSet rate-quote-9a1b has timed out progressing"}
+logs:
+  rate-quote-9a1b-new01:
+    previous: []
+    current: ["INFO rate-quote 5.2.0 listening on :8080", "INFO health endpoints at /internal/healthz"]
+metrics:
+  rate-quote:
+    error_rate_pct: [0.3, 0.3, 0.4, 0.5, 0.6]
+    latency_p95_ms: [310, 305, 420, 480, 510]
+    ready_replicas: [4, 4, 2, 2, 2]

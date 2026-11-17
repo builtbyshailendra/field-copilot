@@ -1,0 +1,22 @@
+id: s02-memory-leak
+alert: "KubePodCrashLooping: tracking-worker restarting every few hours"
+service: tracking-worker
+truth: {cause: memory_leak, action: rollback, evidence: ["OOMKilled"]}
+deploys:
+  - {service: tracking-worker, revision: 87, image: "tracking-worker:0.87.1", minutes_ago: 9000, by: ci}
+  - {service: tracking-worker, revision: 88, image: "tracking-worker:0.88.0", minutes_ago: 400, by: ci, notes: "bump fastjsonparse 3.1 -> 4.0"}
+config_changes: []
+pods:
+  - {name: tracking-worker-5b8c-aaaaa, service: tracking-worker, revision: 88, status: Running, ready: true, restarts: 2, last_state: {reason: OOMKilled, exit_code: 137}}
+  - {name: tracking-worker-5b8c-bbbbb, service: tracking-worker, revision: 88, status: Running, ready: true, restarts: 1, last_state: {reason: OOMKilled, exit_code: 137}}
+events:
+  - {minutes_ago: 35, object: pod/tracking-worker-5b8c-aaaaa, reason: Killing, message: "Container tracking-worker exceeded its memory limit (1Gi) and was OOMKilled"}
+logs:
+  tracking-worker-5b8c-aaaaa:
+    previous: ["INFO processed 120000 carrier events", "WARN schema cache size 48211", "INFO processed 180000 carrier events"]
+    current: ["INFO starting tracking-worker 0.88.0", "INFO processed 2000 carrier events"]
+metrics:
+  tracking-worker:
+    memory_mib: [300, 420, 560, 700, 850, 1010, 320, 450]
+    error_rate_pct: [0.1, 0.1, 0.1, 0.2, 0.2, 0.3, 0.1, 0.1]
+    ready_replicas: [2, 2, 2, 2, 2, 1, 2, 2]

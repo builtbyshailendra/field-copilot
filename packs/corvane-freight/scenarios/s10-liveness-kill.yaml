@@ -1,0 +1,21 @@
+id: s10-liveness-kill
+alert: "KubePodCrashLooping: carrier-gateway restarting under load"
+service: carrier-gateway
+truth: {cause: probe_misconfigured, action: none, evidence: ["Liveness probe failed"]}
+deploys:
+  - {service: carrier-gateway, revision: 12, image: "carrier-gateway:1.2.0", minutes_ago: 30000, by: ci}
+config_changes: []
+pods:
+  - {name: carrier-gateway-4c4c-g01, service: carrier-gateway, revision: 12, status: Running, ready: true, restarts: 7, last_state: {reason: Error, exit_code: 137}}
+events:
+  - {minutes_ago: 8, object: pod/carrier-gateway-4c4c-g01, reason: Unhealthy, message: "Liveness probe failed: Get \"http://10.0.4.12:8080/healthz\": context deadline exceeded (timeout 1s)"}
+  - {minutes_ago: 8, object: pod/carrier-gateway-4c4c-g01, reason: Killing, message: "Container carrier-gateway failed liveness probe, will be restarted"}
+logs:
+  carrier-gateway-4c4c-g01:
+    previous: ["INFO handling 900 req/s", "WARN event loop lag 1400ms"]
+    current: ["INFO starting carrier-gateway 1.2.0"]
+metrics:
+  carrier-gateway:
+    memory_mib: [400, 410, 405, 415]
+    latency_p95_ms: [200, 900, 1500, 1600]
+    error_rate_pct: [0.3, 0.8, 2.5, 2.9]

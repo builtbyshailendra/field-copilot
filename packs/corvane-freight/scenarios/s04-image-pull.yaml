@@ -1,0 +1,19 @@
+id: s04-image-pull
+alert: "KubeDeploymentReplicasMismatch: label-printer updated replicas not available for 20m"
+service: label-printer
+truth: {cause: image_pull, action: rollback, evidence: ["manifest unknown"]}
+deploys:
+  - {service: label-printer, revision: 41, image: "label-printer:1.41.3", minutes_ago: 20000, by: ci}
+  - {service: label-printer, revision: 42, image: "label-printer:1.42.O", minutes_ago: 22, by: ci}
+config_changes: []
+pods:
+  - {name: label-printer-3f3f-new01, service: label-printer, revision: 42, status: ImagePullBackOff, ready: false, restarts: 0}
+  - {name: label-printer-1a1a-old01, service: label-printer, revision: 41, status: Running, ready: true, restarts: 0}
+events:
+  - {minutes_ago: 21, object: pod/label-printer-3f3f-new01, reason: Failed, message: "Failed to pull image \"registry.corvane.internal/label-printer:1.42.O\": manifest unknown"}
+logs:
+  label-printer-3f3f-new01: {previous: [], current: []}
+metrics:
+  label-printer:
+    error_rate_pct: [0.1, 0.1, 0.1, 0.1]
+    ready_replicas: [2, 2, 1, 1]

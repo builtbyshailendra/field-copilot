@@ -1,0 +1,19 @@
+id: s09-cert-expired
+alert: "Probe failure: https://api.corvane.example/health failing from outside"
+service: shipment-api
+truth: {cause: cert_expired, action: none, evidence: ["certificate has expired"]}
+deploys:
+  - {service: shipment-api, revision: 213, image: "shipment-api:2.13.0", minutes_ago: 2900, by: ci}
+config_changes: []
+pods:
+  - {name: shipment-api-6c4b-qwert, service: shipment-api, revision: 213, status: Running, ready: true, restarts: 0}
+events:
+  - {minutes_ago: 1500, object: certificate/api-corvane-tls, reason: Failed, message: "Failed to renew: DNS-01 challenge failed for api.corvane.example"}
+logs:
+  shipment-api-6c4b-qwert:
+    previous: []
+    current: ["WARN upstream client error: x509: certificate has expired or is not yet valid", "INFO GET /v1/shipments 200 in 42ms"]
+metrics:
+  shipment-api:
+    error_rate_pct: [0.2, 0.2, 0.2, 0.2]
+    external_probe_success_pct: [100, 100, 0, 0]
