@@ -1,0 +1,58 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "fc.name" . }}-api
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  minAvailable: 1
+  selector: {matchLabels: {app: {{ include "fc.name" . }}-api}}
+{{- end }}
+{{- if .Values.hpa.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "fc.name" . }}-api
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ if .Values.rollouts.enabled }}argoproj.io/v1alpha1{{ else }}apps/v1{{ end }}
+    kind: {{ if .Values.rollouts.enabled }}Rollout{{ else }}Deployment{{ end }}
+    name: {{ include "fc.name" . }}-api
+  minReplicas: {{ .Values.hpa.minReplicas }}
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: {name: cpu, target: {type: Utilization, averageUtilization: {{ .Values.hpa.cpu }}}}
+{{- end }}
+{{- if .Values.networkPolicy.enabled }}
+---
+# The database accepts connections only from the API and the worker; the API only from the
+# web app, the Rollouts analysis and pods in this namespace (the ingress controller is
+# allowed through its own namespace label in customer values).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fc.name" . }}-postgres
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  podSelector: {matchLabels: {app: {{ include "fc.name" . }}-postgres}}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app: {{ include "fc.name" . }}-api}}
+        - podSelector: {matchLabels: {app: {{ include "fc.name" . }}-worker}}
+      ports: [{port: 5432}]
+{{- end }}
+{{- if .Values.serviceMonitor.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "fc.name" . }}-api
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  selector: {matchLabels: {app.kubernetes.io/instance: {{ .Release.Name }}}}
+  endpoints: [{port: http, path: /metrics, interval: 30s}]
+{{- end }}

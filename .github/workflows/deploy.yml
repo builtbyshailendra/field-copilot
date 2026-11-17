@@ -1,0 +1,51 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chart:
+    name: lint and render the chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+      - run: helm lint deploy/helm/field-copilot
+      - name: Render demo, canary and both customers
+        run: |
+          helm template demo deploy/helm/field-copilot > /tmp/demo.yaml
+          helm template demo deploy/helm/field-copilot --set rollouts.enabled=true > /tmp/canary.yaml
+          helm template corvane deploy/helm/field-copilot -f deploy/helm/values-corvane.yaml > /tmp/corvane.yaml
+          helm template tallowmere deploy/helm/field-copilot -f deploy/helm/values-tallowmere.yaml > /tmp/tallowmere.yaml
+      - name: Validate against Kubernetes schemas
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar xz
+          ./kubeconform -strict -ignore-missing-schemas -summary /tmp/demo.yaml /tmp/canary.yaml /tmp/corvane.yaml /tmp/tallowmere.yaml
+      - name: Check the alert rules with promtool
+        run: |
+          python -c "import yaml; d=yaml.safe_load(open('deploy/observability/prometheus-rules.yaml')); yaml.safe_dump(d['spec'], open('/tmp/rules.yaml','w'))"
+          docker run --rm -v /tmp:/w --entrypoint promtool prom/prometheus:v2.55.1 check rules /w/rules.yaml
+
+  kind-canary:
+    name: build images, deploy to kind, eval-gated canary drill
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - uses: azure/setup-helm@v4
+      - name: Build the API image
+        run: docker build -f deploy/docker/api.Dockerfile -t field-copilot-api:ci .
+      - name: Build the web image
+        run: docker build -f deploy/docker/web.Dockerfile --build-arg API_URL=http://demo-api:8020 -t field-copilot-web:ci .
+      - uses: helm/kind-action@v1
+        with: {cluster_name: copilot}
+      - run: kind load docker-image field-copilot-api:ci field-copilot-web:ci --name copilot
+      - name: Canary drill
+        run: bash deploy/scripts/canary_drill.sh

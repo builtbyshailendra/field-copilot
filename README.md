@@ -17,12 +17,12 @@ Being built step by step. See the build log below.
 |---|---|---|
 | Discovery and design | Discovery packs for both customers, workshop plan, architecture, decision records | ✅ Step 1 |
 | LLM layer | Fake, recorded and Anthropic providers; structured output; tool use; streaming; retries; fallback; cost | ✅ Step 2 |
-| Retrieval | Chunking, contextual retrieval, embeddings, pgvector, full-text, hybrid RRF, rerank, verified citations | ⏳ |
-| Agents | Tools, budgets, approvals, memory, supervisor + specialists, MCP server, guardrails | ⏳ |
-| Evaluation | Retrieval, faithfulness, agent success, safety; judge calibration; CI gates | ⏳ |
-| Product | FastAPI + SSE, multi-tenant RLS, Next.js app, voice notes | ⏳ |
-| Production | OTel traces, Prometheus/Grafana, Helm, Argo CD, eval-gated canary, SBOM/signing, Terraform for AWS | ⏳ |
-| Delivery | Security questionnaire, pilot plan, ROI, runbooks, handover | ⏳ |
+| Retrieval | Chunking, contextual retrieval, embeddings, pgvector, full-text, hybrid RRF, rerank, verified citations | ✅ Steps 4–6 |
+| Agents | Tools, budgets, approvals, memory, supervisor + specialists, MCP server, guardrails | ✅ Steps 7–12 |
+| Evaluation | Retrieval, faithfulness, agent success, safety; judge calibration; CI gates; ML router; LangGraph/LlamaIndex comparison | ✅ Steps 13–15 |
+| Product | FastAPI + SSE, multi-tenant RLS, Next.js app, voice notes | ✅ Steps 16–18 |
+| Production | OTel traces, Prometheus/Grafana, Helm, Argo CD, eval-gated canary, SBOM/signing, Terraform for AWS | ⏳ Steps 19–23 |
+| Delivery | Security questionnaire, pilot plan, ROI, runbooks, handover | ⏳ Step 24 |
 
 ## Where to start reading
 
@@ -242,6 +242,15 @@ What broke: faster-whisper's own audio decoder calls PyAV with an argument newer
 - **Grafana dashboard** (`deploy/observability/grafana-dashboard.json`) for all of the above, filterable by tenant.
 
 The **startup self-check** runs in every pod in a few seconds without a model: router accuracy, retrieval MRR per tenant, and the output-policy cases. A healthy build scores 0.83; a deliberately broken build (`FIELD_FAULT=empty_retrieval`) scores 0.48. Step 20's canary gates on that number.
+
+### Step 20: containers, Helm, Argo CD, and a canary that checks quality
+- **Images** (`deploy/docker/`): the API (Python 3.12 slim, non-root, read-only root filesystem in the cluster) and the web app (Next.js standalone output, non-root).
+- **Helm chart** (`deploy/helm/field-copilot`): API, worker, web, demo PostgreSQL, secrets, probes (`/readyz` checks the database), PodDisruptionBudget, HPA, a NetworkPolicy that only lets the app pods reach PostgreSQL, and a ServiceMonitor. Restricted pod security throughout: non-root, no privilege escalation, all capabilities dropped, seccomp on.
+- **One chart, two customers:** `values-corvane.yaml` (AWS Bedrock in ap-south-1, the real cluster as the investigation backend, a stricter quality bar) and `values-tallowmere.yaml` (Anthropic API under a BAA, the workbench URL and token). An **Argo CD ApplicationSet** (`deploy/argocd/`) makes one Application per customer from a list, so a customer change is a pull request to its values file.
+- **Eval-gated canary (Argo Rollouts):** with `rollouts.enabled`, the API is a Rollout. A new build first gets a share of the pods; an AnalysisTemplate then reads the canary's `/v1/selfcheck` (the Step 19 golden-set score) three times and promotes only if every reading is at least `minQuality` (0.75 for the demo, 0.8 for the customers). Otherwise the rollout aborts and the old build keeps serving.
+- **The drill** (`deploy/scripts/canary_drill.sh`, run by `.github/workflows/deploy.yml` on kind): install and smoke-test; ship a build whose retrieval returns nothing and check the rollout aborts with the stable build unchanged; smoke-test the stable build; then ship a good change and check it gets promoted. The same workflow lints and renders the chart for all four configurations, validates the output with kubeconform, and checks the alert rules with promtool.
+
+Checked on my machine: `helm lint` and `helm template` for the demo, canary and both customer configurations; and the smoke script against a healthy API (self-check 0.83, passes) and a broken one (0.48, fails with exit code 1), which are the two readings the analysis decides on. Docker isn't running on this laptop, so the image builds and the kind drill run only in CI.
 
 ## Licence
 

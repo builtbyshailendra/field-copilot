@@ -1,0 +1,78 @@
+{{- if .Values.rollouts.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+{{- else }}
+apiVersion: apps/v1
+kind: Deployment
+{{- end }}
+metadata:
+  name: {{ include "fc.name" . }}-api
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  revisionHistoryLimit: 5
+  selector: {matchLabels: {app: {{ include "fc.name" . }}-api}}
+  template:
+    metadata:
+      labels: {app: {{ include "fc.name" . }}-api}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8020"
+    spec: {{- include "fc.apiPodSpec" . | nindent 6 }}
+  {{- if .Values.rollouts.enabled }}
+  strategy:
+    canary:
+      stableService: {{ include "fc.name" . }}-api
+      canaryService: {{ include "fc.name" . }}-api-canary
+      steps:
+        - setWeight: {{ .Values.rollouts.canaryWeight }}
+        - analysis:
+            templates: [{templateName: {{ include "fc.name" . }}-quality}]
+        - setWeight: 100
+  {{- else }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fc.name" . }}-api
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  selector: {app: {{ include "fc.name" . }}-api}
+  ports: [{name: http, port: 8020, targetPort: http}]
+{{- if .Values.rollouts.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fc.name" . }}-api-canary
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  selector: {app: {{ include "fc.name" . }}-api}
+  ports: [{name: http, port: 8020, targetPort: http}]
+---
+# The canary is promoted only if its golden-set self-check holds (see core/src/fieldcopilot/selfcheck.py).
+# In a cluster with Prometheus, a second metric can compare canary and stable error rates.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "fc.name" . }}-quality
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  metrics:
+    - name: golden-set-quality
+      initialDelay: 20s
+      interval: 10s
+      count: 3
+      failureLimit: 0
+      consecutiveErrorLimit: 6
+      successCondition: "result >= {{ .Values.rollouts.minQuality }}"
+      provider:
+        web:
+          url: "http://{{ include "fc.name" . }}-api-canary.{{ .Release.Namespace }}.svc.cluster.local:8020/v1/selfcheck"
+          jsonPath: "{$.score}"
+          timeoutSeconds: 10
+{{- end }}

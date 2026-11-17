@@ -1,0 +1,34 @@
+{{- if .Values.postgres.enabled }}
+# Demo database (ephemeral). Real deployments use a managed PostgreSQL (RDS with pgvector)
+# and pass its DSNs through secrets.existingSecret.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fc.name" . }}-postgres
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: {{ include "fc.name" . }}-postgres}}
+  template:
+    metadata: {labels: {app: {{ include "fc.name" . }}-postgres}}
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          env:
+            - {name: POSTGRES_PASSWORD, value: {{ .Values.postgres.password | quote }}}
+            - {name: POSTGRES_DB, value: fieldcopilot}
+          ports: [{containerPort: 5432}]
+          readinessProbe: {exec: {command: ["pg_isready", "-U", "postgres"]}, periodSeconds: 3}
+          volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+      volumes: [{name: data, emptyDir: {}}]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fc.name" . }}-postgres
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  selector: {app: {{ include "fc.name" . }}-postgres}
+  ports: [{port: 5432, targetPort: 5432}]
+{{- end }}

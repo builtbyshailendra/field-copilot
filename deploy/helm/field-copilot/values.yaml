@@ -1,0 +1,52 @@
+# Defaults run a self-contained demo (fake model, in-chart PostgreSQL). Customer
+# deployments override these in values-<tenant>.yaml (managed database, real model,
+# data-residency settings).
+image:
+  api: {repository: ghcr.io/builtbyshailendra/field-copilot-api, tag: latest, pullPolicy: IfNotPresent}
+  web: {repository: ghcr.io/builtbyshailendra/field-copilot-web, tag: latest, pullPolicy: IfNotPresent}
+
+api:
+  replicas: 2
+  env:
+    FIELD_LLM_MODE: fake          # anthropic | bedrock | recorded | fake
+    FIELD_EMBEDDER: hashing       # fastembed in production
+    APP_ENV: dev
+  fault: ""                       # FIELD_FAULT, only for the canary drill
+  resources:
+    requests: {cpu: 100m, memory: 384Mi}
+    limits: {memory: 1Gi}
+
+worker:
+  enabled: true
+  resources:
+    requests: {cpu: 50m, memory: 256Mi}
+    limits: {memory: 768Mi}
+
+web:
+  enabled: true
+  replicas: 1
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 384Mi}
+
+# Eval-gated progressive delivery (needs the Argo Rollouts controller).
+rollouts:
+  enabled: false
+  canaryWeight: 50
+  minQuality: 0.75
+
+postgres:
+  enabled: true                   # demo only; customers use a managed database via secrets.existingSecret
+  image: postgres:16
+  password: demo-postgres-password
+
+secrets:
+  existingSecret: ""              # holds FIELD_JWT_SECRET, FIELD_ADMIN_DSN, FIELD_APP_DSN, ANTHROPIC_API_KEY
+  jwtSecret: demo-only-jwt-secret-change-me-0123456789
+  demoPassword: demo-password
+  anthropicApiKey: ""
+
+hpa: {enabled: false, minReplicas: 2, maxReplicas: 6, cpu: 70}
+pdb: {enabled: true}
+networkPolicy: {enabled: true}
+serviceMonitor: {enabled: false}

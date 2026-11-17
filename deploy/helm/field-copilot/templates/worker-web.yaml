@@ -1,0 +1,62 @@
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fc.name" . }}-worker
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: {{ include "fc.name" . }}-worker}}
+  template:
+    metadata: {labels: {app: {{ include "fc.name" . }}-worker}}
+    spec:
+      {{- include "fc.podSecurity" . | nindent 6 }}
+      containers:
+        - name: worker
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          command: ["python", "-m", "fieldcopilot.api.worker"]
+          envFrom: [{secretRef: {name: {{ include "fc.secretName" . }}}}]
+          env:
+            {{- range $k, $v := .Values.api.env }}
+            - {name: {{ $k }}, value: {{ $v | quote }}}
+            {{- end }}
+          resources: {{- toYaml .Values.worker.resources | nindent 12 }}
+          {{- include "fc.containerSecurity" . | nindent 10 }}
+          volumeMounts: [{name: tmp, mountPath: /tmp}]
+      volumes: [{name: tmp, emptyDir: {}}]
+{{- end }}
+{{- if .Values.web.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fc.name" . }}-web
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector: {matchLabels: {app: {{ include "fc.name" . }}-web}}
+  template:
+    metadata: {labels: {app: {{ include "fc.name" . }}-web}}
+    spec:
+      {{- include "fc.podSecurity" . | nindent 6 }}
+      containers:
+        - name: web
+          image: "{{ .Values.image.web.repository }}:{{ .Values.image.web.tag }}"
+          imagePullPolicy: {{ .Values.image.web.pullPolicy }}
+          ports: [{name: http, containerPort: 3100}]
+          readinessProbe: {httpGet: {path: /login, port: http}, periodSeconds: 5}
+          resources: {{- toYaml .Values.web.resources | nindent 12 }}
+          {{- include "fc.containerSecurity" . | nindent 10 }}
+          volumeMounts: [{name: tmp, mountPath: /tmp}, {name: cache, mountPath: /app/.next/cache}]
+      volumes: [{name: tmp, emptyDir: {}}, {name: cache, emptyDir: {}}]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fc.name" . }}-web
+  labels: {{- include "fc.labels" . | nindent 4 }}
+spec:
+  selector: {app: {{ include "fc.name" . }}-web}
+  ports: [{name: http, port: 3100, targetPort: http}]
+{{- end }}

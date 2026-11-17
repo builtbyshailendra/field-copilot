@@ -1,0 +1,20 @@
+# Corvane Freight: runs inside Corvane's own AWS account (data residency). The model is
+# reached through Amazon Bedrock over a private VPC endpoint (see deploy/terraform), the
+# database is RDS with pgvector, and the copilot reads the cluster with a read-only role.
+image:
+  api: {tag: "REPLACE_WITH_RELEASE_SHA"}
+  web: {tag: "REPLACE_WITH_RELEASE_SHA"}
+api:
+  replicas: 3
+  env:
+    FIELD_LLM_MODE: bedrock
+    FIELD_EMBEDDER: fastembed
+    FIELD_CLUSTER: kube
+    FIELD_NAMESPACE: freight
+    AWS_REGION: ap-south-1
+    APP_ENV: prod
+rollouts: {enabled: true, canaryWeight: 25, minQuality: 0.8}
+postgres: {enabled: false}
+secrets: {existingSecret: field-copilot-corvane}   # synced from AWS Secrets Manager by External Secrets
+hpa: {enabled: true, minReplicas: 3, maxReplicas: 8, cpu: 65}
+serviceMonitor: {enabled: true}

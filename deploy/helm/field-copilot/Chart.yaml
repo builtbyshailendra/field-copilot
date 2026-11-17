@@ -1,0 +1,6 @@
+apiVersion: v2
+name: field-copilot
+description: One AI copilot platform; one release per customer (values-<tenant>.yaml)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

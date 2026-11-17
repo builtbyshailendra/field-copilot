@@ -1,0 +1,34 @@
+# GitOps: one Argo CD Application per customer, generated from this list. Each customer
+# gets the same chart with its own values file, namespace and (in production) cluster.
+# Changing a customer means a pull request to its values file; Argo CD syncs it, and the
+# Rollouts canary gates the new build on its golden-set quality.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: field-copilot
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - {tenant: corvane, cluster: https://kubernetes.default.svc, namespace: copilot-corvane}
+          - {tenant: tallowmere, cluster: https://kubernetes.default.svc, namespace: copilot-tallowmere}
+  template:
+    metadata:
+      name: "field-copilot-{{ .tenant }}"
+      labels: {app: field-copilot, tenant: "{{ .tenant }}"}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/builtbyshailendra/field-copilot
+        targetRevision: main
+        path: deploy/helm/field-copilot
+        helm:
+          valueFiles: ["../values-{{ .tenant }}.yaml"]
+      destination:
+        server: "{{ .cluster }}"
+        namespace: "{{ .namespace }}"
+      syncPolicy:
+        automated: {prune: true, selfHeal: true}
+        syncOptions: [CreateNamespace=true]
