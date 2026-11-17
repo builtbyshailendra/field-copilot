@@ -40,6 +40,9 @@ class Reply:
     cost_usd: float = 0.0
     approvals: list[str] = field(default_factory=list)
     violations: list[str] = field(default_factory=list)
+    trace: list[dict] = field(default_factory=list)
+    flags: list[str] = field(default_factory=list)
+    status: str = "completed"
 
 
 @dataclass
@@ -98,7 +101,10 @@ class Copilot:
                 route == "investigate_incident" and self.s.agent_route == "investigate_incident"):
             run = self.s.agent.run(message, session=session)
             text = run.final.summary if run.final is not None else (run.error or run.status)
-            return Reply(route, self.s.agent.purpose, text, run.final, cost_usd=run.cost_usd, approvals=run.approvals)
+            return Reply(route, self.s.agent.purpose, text, run.final, cost_usd=run.cost_usd, approvals=run.approvals,
+                         trace=[{"index": s.index, "kind": s.kind, "name": s.name, "detail": s.detail,
+                                 "cost_usd": s.cost_usd, "latency_ms": s.latency_ms} for s in run.steps],
+                         flags=run.flags, status=run.status)
         result = self.s.answerer.answer(message, budget)
         text = " ".join(c.text for c in result.claims) or {
             "not_in_documents": "The documents don't cover that.",

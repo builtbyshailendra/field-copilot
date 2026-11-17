@@ -54,40 +54,63 @@ class User:
 AuditSink = Callable[[str, dict[str, Any]], None]
 
 
+class MemoryApprovalStore:
+    """In-process store (tests, single-process demos). The API uses the PostgreSQL store."""
+
+    def __init__(self) -> None:
+        self._items: dict[str, Approval] = {}
+        self._ids = itertools.count(1)
+
+    def next_id(self) -> str:
+        return f"APR-{next(self._ids):04d}"
+
+    def save(self, approval: Approval) -> None:
+        self._items[approval.id] = approval
+
+    def load(self, approval_id: str) -> Approval | None:
+        return self._items.get(approval_id)
+
+    def list(self, tenant: str) -> list[Approval]:
+        return [a for a in self._items.values() if a.tenant == tenant]
+
+
 class ApprovalService:
     def __init__(self, registry: ToolRegistry, approver_roles: dict[str, str],
                  ttl_minutes: dict[str, int] | None = None, now: Callable[[], datetime] | None = None,
-                 audit: AuditSink | None = None):
+                 audit: AuditSink | None = None, store: Any = None):
         self.registry = registry
         self.approver_roles = approver_roles
         self.ttl = ttl_minutes or {}
         self.now = now or (lambda: datetime.now(timezone.utc))
         self.audit = audit or (lambda event, data: None)
-        self._items: dict[str, Approval] = {}
-        self._ids = itertools.count(1)
+        self.store = store or MemoryApprovalStore()
 
     def request(self, tenant: str, run_id: str, tool: str, args: dict[str, Any], summary: str) -> Approval:
         self.registry.get(tool)  # must exist
         now = self.now()
         approval = Approval(
-            id=f"APR-{next(self._ids):04d}", tenant=tenant, run_id=run_id, tool=tool, args=args, summary=summary,
+            id=self.store.next_id(), tenant=tenant, run_id=run_id, tool=tool, args=args, summary=summary,
             hash=content_hash(tool, args), created_at=now, expires_at=now + timedelta(minutes=self.ttl.get(tenant, 15)),
         )
-        self._items[approval.id] = approval
+        self.store.save(approval)
         self.audit("approval.requested", {"id": approval.id, "tenant": tenant, "tool": tool, "args": args, "run": run_id})
         return approval
 
     def get(self, approval_id: str, tenant: str) -> Approval:
-        approval = self._items.get(approval_id)
+        approval = self.store.load(approval_id)
         if approval is None or approval.tenant != tenant:  # never reveal another tenant's approvals
             raise ApprovalError(f"no approval {approval_id}")
         if approval.status == "pending" and self.now() >= approval.expires_at:
             approval.status = "expired"
+            self.store.save(approval)
             self.audit("approval.expired", {"id": approval.id, "tenant": tenant})
         return approval
 
     def pending(self, tenant: str) -> list[Approval]:
-        return [a for a in self._items.values() if a.tenant == tenant and self.get(a.id, tenant).status == "pending"]
+        return [a for a in self.store.list(tenant) if self.get(a.id, tenant).status == "pending"]
+
+    def all(self, tenant: str) -> list[Approval]:
+        return [self.get(a.id, tenant) for a in self.store.list(tenant)]
 
     def _check(self, approval: Approval, user: User, seen_hash: str) -> None:
         if user.tenant != approval.tenant:
@@ -103,19 +126,22 @@ class ApprovalService:
         approval = self.get(approval_id, user.tenant)
         self._check(approval, user, seen_hash)
         approval.status, approval.decided_by, approval.decided_at, approval.reason = "rejected", user.name, self.now(), reason
+        self.store.save(approval)
         self.audit("approval.rejected", {"id": approval.id, "by": user.name, "reason": reason})
         return approval
 
     def approve(self, approval_id: str, user: User, seen_hash: str, reason: str = "") -> tuple[Approval, ToolResult]:
         approval = self.get(approval_id, user.tenant)
         self._check(approval, user, seen_hash)
-        approval.status, approval.decided_by, approval.decided_at, approval.reason = "approved", user.name, self.now(), reason
-        self.audit("approval.approved", {"id": approval.id, "by": user.name, "reason": reason})
         tool = self.registry.get(approval.tool)
         if tool.side_effect != "acts":
             raise ApprovalError(f"{tool.name} is not an executable action")
+        approval.status, approval.decided_by, approval.decided_at, approval.reason = "approved", user.name, self.now(), reason
+        self.store.save(approval)  # recorded as approved before anything runs
+        self.audit("approval.approved", {"id": approval.id, "by": user.name, "reason": reason})
         result, _ = run_tool(tool, ToolContext(approval.tenant, approval.run_id, user.name), approval.args)
         approval.status = "failed" if result.is_error else "executed"
         approval.outcome = result.as_text()[:2000]
+        self.store.save(approval)
         self.audit("approval.executed", {"id": approval.id, "status": approval.status, "outcome": approval.outcome[:500]})
         return approval, result

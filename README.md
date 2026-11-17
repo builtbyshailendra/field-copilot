@@ -199,6 +199,18 @@ What broke: a leakage test failed on the first run. One training template ("what
 
 My conclusion, with line counts and trade-offs in `docs/frameworks-comparison.md`: a graph for fixed procedures (case review), an agent loop for open-ended work (investigations), the same approval rules either way.
 
+### Step 16: the API
+FastAPI service (`core/src/fieldcopilot/api/`), tested against real PostgreSQL locally and in CI:
+- **Tenancy you can't forget:** every table has a tenant column and a row-level security policy keyed on `app.tenant`, set per transaction. The API connects as a non-superuser role with `FORCE ROW LEVEL SECURITY`, so a query with no `WHERE` clause still sees only its tenant's rows, and inserting a row for the other tenant fails. A test proves both.
+- **Sign-in:** short-lived JWTs with user, tenant and roles; scrypt-hashed demo users (an identity provider in a real deployment); an httpOnly cookie for the web app, with a CSRF header required on writes.
+- **`POST /v1/ask` streams Server-Sent Events:** the route, each agent step as it happens, the answer, done. An `Idempotency-Key` replays the stored run instead of running (and paying) twice. A per-user token bucket rate-limits questions.
+- **Approvals in PostgreSQL:** pending, approved, executed or failed, with the approver and reason. The role, tenant and content-hash checks from Step 7 apply. The approval is saved as approved before the action runs.
+- **Audit log:** append-only (a trigger rejects UPDATE and DELETE) and redacted.
+- **Job queue in PostgreSQL** (`FOR UPDATE SKIP LOCKED`), with a worker that sets the tenant on its connections too and retries failures up to three times. The first job type rebuilds a tenant's search index.
+- `/healthz` doesn't touch the database, so a database outage doesn't restart every copy; `/readyz` does.
+
+What broke: redacting the audit payload as one JSON string let the password pattern swallow the closing `"}` and broke the JSON. Redaction now walks the structure and redacts each value.
+
 ## Licence
 
 MIT

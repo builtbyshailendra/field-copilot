@@ -95,6 +95,13 @@ class Agent:
         self.limits = limits or Limits()
         self.final_schema, self.output_filter, self.memory = final_schema, output_filter, memory
         self.purpose, self.effort, self.clock = purpose, effort, clock
+        self.on_step: Callable[[Step], None] | None = None  # live progress (the API streams it)
+        self.last_run: AgentRun | None = None
+
+    def _record(self, run: AgentRun, step: Step) -> None:
+        run.steps.append(step)
+        if self.on_step:
+            self.on_step(step)
 
     def run(self, task: str, session: str | None = None, extras: dict[str, Any] | None = None) -> AgentRun:
         run = AgentRun(run_id=f"run-{uuid.uuid4().hex[:10]}", tenant=self.tenant, task=task)
@@ -123,9 +130,10 @@ class Agent:
             except LLMError as error:
                 run.status, run.error = "error", f"{type(error).__name__}: {error}"
                 break
-            run.steps.append(Step(index, "model", self.purpose, {"stop": response.stop_reason, "text": response.text[:500],
-                                                                 "tool_calls": [c.name for c in response.tool_calls]},
-                                  response.cost_usd, response.latency_ms))
+            self._record(run, Step(len(run.steps) + 1, "model", self.purpose,
+                                   {"stop": response.stop_reason, "text": response.text[:500],
+                                    "tool_calls": [c.name for c in response.tool_calls]},
+                                   response.cost_usd, response.latency_ms))
             messages.append({"role": "assistant", "content": response.assistant_content or response.text})
             if not response.tool_calls:
                 self._finish(run, response.text)
@@ -140,6 +148,7 @@ class Agent:
             run.status = "awaiting_approval"
         if self.memory and session and run.final_text:
             self.memory.remember(session, task, run.final_text)
+        self.last_run = run
         return run
 
     def _finish(self, run: AgentRun, text: str) -> None:
@@ -165,9 +174,9 @@ class Agent:
             text, flags = self.output_filter(text)
             run.flags += [f"{name}:{f}" for f in flags]
         run.evidence[call_id] = text
-        run.steps.append(Step(len(run.steps) + 1, "tool", name, {"args": args, "error": result.is_error,
-                                                                 "approval": result.approval_id, "output": text[:800]},
-                              latency_ms=round((time.perf_counter() - started) * 1000, 2)))
+        self._record(run, Step(len(run.steps) + 1, "tool", name, {"args": args, "error": result.is_error,
+                                                                  "approval": result.approval_id, "output": text[:800]},
+                               latency_ms=round((time.perf_counter() - started) * 1000, 2)))
         return {"type": "tool_result", "tool_use_id": call_id, "content": wrap_output(name, call_id, text),
                 **({"is_error": True} if result.is_error else {})}
 

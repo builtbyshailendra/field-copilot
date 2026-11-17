@@ -81,5 +81,17 @@ def redact(text: str, include_pii: bool = True) -> tuple[str, list[str]]:
     return "".join(out), [f.kind for f in findings]
 
 
+def redact_obj(value):
+    """Redact every string inside a JSON-like structure. (Redacting serialized JSON as one
+    string can swallow quotes and braces and break the document.)"""
+    if isinstance(value, str):
+        return redact(value)[0]
+    if isinstance(value, dict):
+        return {k: redact_obj(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact_obj(v) for v in value]
+    return value
+
+
 def contains_secret(text: str) -> bool:
     return bool(find(text, include_pii=False))
