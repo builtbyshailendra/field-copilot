@@ -63,6 +63,31 @@ The chunker never crosses a heading, keeps each chunk's heading path, splits lon
 
 Contextual retrieval prepends one or two model-written sentences to each chunk before indexing. The whole document sits in the cached system prompt, so only the first chunk of a document pays for it; results are cached on disk by prompt version and content, so re-indexing an unchanged corpus costs nothing. If the model is down, chunks are indexed without context rather than failing the ingest.
 
+### Step 5: search, and measuring it
+Two index backends with one interface: PostgreSQL (pgvector HNSW for vectors, built-in full-text search for keywords, every row and query scoped to a tenant), and an in-memory NumPy + BM25 index for this Windows machine, which has no pgvector. CI runs the store tests against a real `pgvector/pgvector:pg17` container. Keyword and vector results are merged with Reciprocal Rank Fusion, then optionally reranked by a local cross-encoder or by the fast model.
+
+Embeddings run locally (BAAI/bge-small-en-v1.5 on CPU), so no document leaves the machine. Tests use a hashing embedder that needs no download.
+
+48 labelled questions (24 per customer), phrased the way an engineer or a nurse would ask rather than copying the documents. Real results, no API key needed:
+
+| Customer | Setup | hit@1 | recall@5 | MRR |
+|---|---|---|---|---|
+| Corvane | keyword | 0.62 | 0.82 | 0.73 |
+| Corvane | vector | 0.75 | 0.94 | 0.84 |
+| Corvane | hybrid | 0.67 | 0.94 | 0.79 |
+| Corvane | **hybrid + cross-encoder** | **0.79** | 0.90 | **0.87** |
+| Tallowmere | keyword | 0.71 | 0.96 | 0.79 |
+| Tallowmere | vector | 0.67 | 1.00 | 0.83 |
+| Tallowmere | hybrid | 0.79 | 1.00 | 0.87 |
+| Tallowmere | **hybrid + cross-encoder** | 0.75 | 1.00 | **0.88** |
+
+What I take from it:
+- Hybrid + reranker has the best MRR for both customers, so it's the default. With 24 questions each, one question moves hit@1 by 0.04, so small gaps are noise.
+- For Corvane, plain hybrid ranked first less often than vector alone: keyword search over-rewards runbooks that share a service name. The reranker fixes that.
+- A templated context sentence ("This section is from X and covers Y") made Corvane's vector search *worse* (hit@1 0.75 → 0.58). Generic context dilutes the embedding. Claude-written contextual retrieval has to beat that, and gets measured when a key exists.
+
+Full tables: `core/evals/results/retrieval/`.
+
 ## Licence
 
 MIT

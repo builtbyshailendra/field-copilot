@@ -1,0 +1,162 @@
+[
+  {
+    "tenant": "corvane-freight",
+    "setup": "keyword",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.625,
+    "recall_at_5": 0.819,
+    "mrr": 0.729,
+    "ndcg_at_5": 0.724
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "vector",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.75,
+    "recall_at_5": 0.938,
+    "mrr": 0.845,
+    "ndcg_at_5": 0.843
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "hybrid",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.667,
+    "recall_at_5": 0.938,
+    "mrr": 0.788,
+    "ndcg_at_5": 0.819
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "hybrid+cross-encoder",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.792,
+    "recall_at_5": 0.903,
+    "mrr": 0.872,
+    "ndcg_at_5": 0.853
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "keyword (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.625,
+    "recall_at_5": 0.84,
+    "mrr": 0.739,
+    "ndcg_at_5": 0.747
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "vector (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.583,
+    "recall_at_5": 0.882,
+    "mrr": 0.766,
+    "ndcg_at_5": 0.768
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "hybrid (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.708,
+    "recall_at_5": 0.944,
+    "mrr": 0.828,
+    "ndcg_at_5": 0.833
+  },
+  {
+    "tenant": "corvane-freight",
+    "setup": "hybrid+cross-encoder (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.833,
+    "recall_at_5": 0.882,
+    "mrr": 0.891,
+    "ndcg_at_5": 0.852
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "keyword",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.708,
+    "recall_at_5": 0.958,
+    "mrr": 0.793,
+    "ndcg_at_5": 0.829
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "vector",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.667,
+    "recall_at_5": 1.0,
+    "mrr": 0.833,
+    "ndcg_at_5": 0.877
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "hybrid",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.792,
+    "recall_at_5": 1.0,
+    "mrr": 0.868,
+    "ndcg_at_5": 0.901
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "hybrid+cross-encoder",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.75,
+    "recall_at_5": 1.0,
+    "mrr": 0.875,
+    "ndcg_at_5": 0.908
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "keyword (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.667,
+    "recall_at_5": 0.958,
+    "mrr": 0.778,
+    "ndcg_at_5": 0.823
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "vector (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.625,
+    "recall_at_5": 1.0,
+    "mrr": 0.79,
+    "ndcg_at_5": 0.843
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "hybrid (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.708,
+    "recall_at_5": 0.958,
+    "mrr": 0.826,
+    "ndcg_at_5": 0.855
+  },
+  {
+    "tenant": "tallowmere-health",
+    "setup": "hybrid+cross-encoder (contextual-fake)",
+    "embedder": "BAAI/bge-small-en-v1.5",
+    "n": 24,
+    "hit_at_1": 0.75,
+    "recall_at_5": 1.0,
+    "mrr": 0.875,
+    "ndcg_at_5": 0.908
+  }
+]

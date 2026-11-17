@@ -1,0 +1,25 @@
+# Labelled retrieval questions for Tallowmere, phrased the way a review nurse would ask.
+- {id: t01, query: "how long must back pain with sciatica last before a lumbar MRI is approved", relevant: [mp-114-lumbar-mri#b-persistent-radiculopathy]}
+- {id: t02, query: "new bladder problems with back pain, does the member need therapy first?", relevant: [mp-114-lumbar-mri#a-red-flag-symptoms]}
+- {id: t03, query: "can they repeat a spine MRI within a year", relevant: [mp-114-lumbar-mri#not-medically-necessary]}
+- {id: t04, query: "do we need x-rays before a knee MRI", relevant: [mp-118-knee-mri#criteria]}
+- {id: t05, query: "knee MRI for a 16 year old with a suspected ACL tear and no x-ray", relevant: [mp-118-knee-mri#exceptions-to-the-x-ray-requirement]}
+- {id: t06, query: "knee locking and giving way after a fall", relevant: [mp-118-knee-mri#a-suspected-internal-derangement]}
+- {id: t07, query: "when is an in-lab sleep study allowed instead of a home test", relevant: [mp-121-sleep-study#home-sleep-apnea-test-first]}
+- {id: t08, query: "what Epworth score is needed", relevant: [mp-121-sleep-study#clinical-criteria-for-any-sleep-study]}
+- {id: t09, query: "which documents are needed for a sleep study request", relevant: [mp-121-sleep-study#required-documentation]}
+- {id: t10, query: "BMI requirement for weight loss surgery", relevant: [mp-130-bariatric#criteria]}
+- {id: t11, query: "how long must the supervised diet program last before bariatric surgery", relevant: [mp-130-bariatric#criteria]}
+- {id: t12, query: "bariatric surgery request for a 15 year old", relevant: [mp-130-bariatric#adolescents]}
+- {id: t13, query: "how many PT visits can happen without authorization", relevant: [mp-142-physical-therapy#initial-visits]}
+- {id: t14, query: "approving more physical therapy sessions after the first twelve", relevant: [mp-142-physical-therapy#additional-visits]}
+- {id: t15, query: "therapy just to keep function stable with no improvement expected", relevant: [mp-142-physical-therapy#maintenance-therapy]}
+- {id: t16, query: "what AHI is needed for a CPAP rental", relevant: [mp-150-cpap#initial-90-day-rental]}
+- {id: t17, query: "CPAP compliance hours per night to keep coverage", relevant: [mp-150-cpap#continued-coverage-after-90-days]}
+- {id: t18, query: "when can a member get a new CPAP machine", relevant: [mp-150-cpap#replacement]}
+- {id: t19, query: "should I send one letter per missing document", relevant: [um-ops-01-rfi-letters#when-to-send-an-rfi]}
+- {id: t20, query: "what deadline do we give providers in a request for information letter", relevant: [um-ops-01-rfi-letters#what-every-rfi-must-contain]}
+- {id: t21, query: "can the letter say the request will probably be denied", relevant: [um-ops-01-rfi-letters#tone]}
+- {id: t22, query: "how many hours for an urgent prior auth decision", relevant: [um-ops-02-timeframes#deadlines-from-cms-0057-f-as-applied-by-tallowme]}
+- {id: t23, query: "does asking for more information pause the clock for Medicare Advantage members", relevant: [um-ops-02-timeframes#when-the-clock-starts-and-pauses]}
+- {id: t24, query: "who is allowed to deny for medical necessity", relevant: [um-ops-02-timeframes#denials]}

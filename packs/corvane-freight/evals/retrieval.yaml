@@ -1,0 +1,26 @@
+# Labelled retrieval questions for Corvane. Written the way an on-call engineer would ask,
+# deliberately not copying the runbooks' wording. `relevant` lists every chunk that answers it.
+- {id: c01, query: "the new pods die right after starting and the restart count keeps going up, what do I check first?", relevant: [rb-crashloop#first-five-minutes, rb-crashloop#when-to-use]}
+- {id: c02, query: "exit code 137 but describe says Error, not OOMKilled", relevant: [rb-oomkilled#telling-the-cases-apart]}
+- {id: c03, query: "deployment stuck at 2 of 4 ready after the release", relevant: [rb-readiness#symptoms, rb-readiness#checks]}
+- {id: c04, query: "does kubernetes automatically undo a failed rollout?", relevant: [rb-readiness#important]}
+- {id: c05, query: "who is allowed to sign off a rollback at 3am", relevant: [rb-rollback#who-can-approve]}
+- {id: c06, query: "can I roll back if the release had a schema migration", relevant: [rb-rollback#when-a-rollback-is-the-right-first-move]}
+- {id: c07, query: "manifest unknown when pulling the image", relevant: [rb-image-pull#checks]}
+- {id: c08, query: "only the newest pods fail after someone changed config, but nothing was deployed", relevant: [rb-config-change#why-this-is-easy-to-miss, rb-config-change#checks]}
+- {id: c09, query: "too many clients already from postgres", relevant: [rb-db-connections#symptoms]}
+- {id: c10, query: "why did scaling up one service break the database for everyone", relevant: [rb-db-connections#usual-causes, pm-2026-07-rate-quote-latency#root-cause]}
+- {id: c11, query: "shipments stuck in processing and the consumer is falling behind", relevant: [rb-queue-lag#symptoms]}
+- {id: c12, query: "is it worth adding more consumer replicas when lag keeps growing", relevant: [rb-queue-lag#what-to-propose, pm-2026-09-orders-queue-lag#what-we-learned]}
+- {id: c13, query: "one carrier is timing out, how do we stop it dragging everything down", relevant: [rb-dependency-outage#what-to-propose]}
+- {id: c14, query: "node is evicting pods because its disk is filling up", relevant: [rb-disk-pressure#two-different-problems, rb-disk-pressure#checks]}
+- {id: c15, query: "No space left on device on the database volume", relevant: [rb-disk-pressure#checks, rb-disk-pressure#what-to-propose]}
+- {id: c16, query: "x509 certificate has expired errors from clients", relevant: [rb-tls-cert#symptoms]}
+- {id: c17, query: "how do I force cert-manager to renew", relevant: [rb-tls-cert#rotation]}
+- {id: c18, query: "what counts as a SEV1", relevant: [rb-escalation#severity-levels]}
+- {id: c19, query: "how often should I post updates during a sev2", relevant: [rb-escalation#communication]}
+- {id: c20, query: "what went wrong with release 214 of shipment-api", relevant: [pm-2026-03-shipment-api-503#root-cause, pm-2026-03-shipment-api-503#summary]}
+- {id: c21, query: "memory kept climbing for hours after a library upgrade", relevant: [pm-2026-05-tracking-worker-oom#timeline, pm-2026-05-tracking-worker-oom#root-cause, rb-oomkilled#memory-checks]}
+- {id: c22, query: "the image tag had a typo, a letter O instead of a zero", relevant: [pm-2026-08-label-printer-imagepull#root-cause]}
+- {id: c23, query: "nobody noticed a rollout that never finished for hours", relevant: [pm-2026-08-label-printer-imagepull#detection]}
+- {id: c24, query: "JVM heap sized to the node instead of the container", relevant: [rb-oomkilled#memory-checks]}
