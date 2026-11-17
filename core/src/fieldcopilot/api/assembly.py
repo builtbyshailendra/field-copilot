@@ -24,7 +24,26 @@ def default_llm() -> LLM:
 
     fake = (FakeProvider().on("route", keyword_route).on("answer", fake_answer).on("investigate", fake_investigator)
             .on("review_case", fake_reviewer).on("supervise", fake_supervisor).on("read_fax", fake_fax_reader))
+    # Load tests only: make each fake model call take as long as a real one might.
+    fake.delay_s = float(os.environ.get("FIELD_FAKE_LATENCY_MS", "0")) / 1000
     return LLM(fake, models=dict(FAKE_MODELS))
+
+
+@lru_cache(maxsize=None)
+def answer_cache(tenant: str):
+    """One semantic cache per tenant per process.
+
+    FIELD_ANSWER_CACHE: "shadow" (default: record would-be hits and whether a fresh answer
+    agreed, serve nothing from cache), "on" (serve hits) or "off".
+    """
+    mode = os.environ.get("FIELD_ANSWER_CACHE", "shadow")
+    if mode not in ("on", "shadow"):
+        return None
+    from fieldcopilot.cache import SemanticCache
+
+    retriever = retriever_for(tenant)
+    return SemanticCache(retriever.index.embedder, mode=mode,
+                         threshold=float(os.environ.get("FIELD_ANSWER_CACHE_THRESHOLD", "0.98")))
 
 
 @lru_cache(maxsize=1)
@@ -46,5 +65,5 @@ def build_copilot(tenant: str, llm: LLM, approvals: ApprovalService) -> Copilot:
 
         agent = build_reviewer(llm, workbench_for_env(), approvals, retriever)
         route = "case_lookup"
-    specialists = Specialists(tenant, GroundedAnswerer(llm, retriever, tenant), agent, route)
+    specialists = Specialists(tenant, GroundedAnswerer(llm, retriever, tenant), agent, route, answer_cache(tenant))
     return Copilot(llm, specialists, approvals, pre_router=pre_router())

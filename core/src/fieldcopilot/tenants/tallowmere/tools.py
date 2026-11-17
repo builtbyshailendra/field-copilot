@@ -147,7 +147,11 @@ def _outputs(messages: list[dict]) -> dict[str, dict]:
 
 
 def fake_reviewer(request: LLMRequest) -> Scripted:
-    case_id = int(re.search(r"case (\d+)", request.messages[0]["content"]).group(1))
+    found = re.search(r"case (\d+)", request.messages[0]["content"])
+    if found is None:  # routed here without a case number (found by the load test): ask for one
+        return Scripted({"summary": "Which case should I review? Give the case number, for example \"case 1042\".",
+                         "policy": "", "criteria": [], "missing_documents": [], "letter_approval": ""})
+    case_id = int(found.group(1))
     seen = _outputs(request.messages)
     if "get_case_facts" not in seen:
         return Scripted(tool_calls=[("get_case_facts", {"case_id": case_id}), ("list_missing_documents", {"case_id": case_id})])

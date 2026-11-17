@@ -30,6 +30,10 @@ REFUSAL = ("I can't do that. Coverage decisions belong to nurses and medical dir
            "need a person's approval. I can look things up, investigate and draft proposals.")
 
 
+def _cited(result: Any) -> frozenset[str]:
+    return frozenset(c.chunk_id for claim in result.claims for c in claim.citations)
+
+
 @dataclass
 class Reply:
     route: str
@@ -51,6 +55,7 @@ class Specialists:
     answerer: GroundedAnswerer
     agent: Agent                     # investigator (Corvane) or case reviewer (Tallowmere)
     agent_route: str                 # route that goes to the agent
+    cache: Any = None                # SemanticCache for document answers (fieldcopilot.cache)
 
 
 class Delegate(BaseModel):
@@ -105,11 +110,30 @@ class Copilot:
                          trace=[{"index": s.index, "kind": s.kind, "name": s.name, "detail": s.detail,
                                  "cost_usd": s.cost_usd, "latency_ms": s.latency_ms} for s in run.steps],
                          flags=run.flags, status=run.status)
-        result = self.s.answerer.answer(message, budget)
+        flags: list[str] = []
+        result, cached = None, None
+        cache = self.s.cache
+        if cache is not None:
+            looked = cache.lookup(message, self.s.answerer)
+            cached = looked.result
+            if cached is not None and cache.mode == "on":
+                result = cached
+                flags.append("cache:hit")
+            elif cached is None:
+                flags.append(f"cache:{looked.outcome}")
+        if result is None:
+            result = self.s.answerer.answer(message, budget)
+            if cache is not None:
+                if cached is not None:  # shadow mode: would the cached answer have been right?
+                    agree = _cited(cached) == _cited(result) and cached.status == result.status
+                    flags.append("cache:shadow_agree" if agree else "cache:shadow_disagree")
+                else:
+                    cache.store(message, result, self.s.answerer)
         text = " ".join(c.text for c in result.claims) or {
             "not_in_documents": "The documents don't cover that.",
             "unverified": "I found an answer but couldn't verify it against the documents, so I'm not showing it."}[result.status]
-        return Reply(route, "grounded_answer", text, result, cost_usd=result.cost_usd)
+        cost = 0.0 if "cache:hit" in flags else result.cost_usd
+        return Reply(route, "grounded_answer", text, result, cost_usd=cost, flags=flags)
 
     # ---- 2. supervisor agent ----------------------------------------------------------
     def supervise(self, message: str, session: str | None = None) -> Reply:

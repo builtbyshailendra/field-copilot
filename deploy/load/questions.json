@@ -1,0 +1,185 @@
+{
+ "_note": "Document questions weighted the way on-call and review traffic repeats itself. near_miss marks questions that must never be answered from cache.",
+ "questions": [
+  {
+   "user": "asha",
+   "message": "Who approves rollbacks at night and at weekends?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "Who approves rollbacks at night and at weekends?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "Who approves rollbacks at night and at weekends?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "Who approves rollbacks at night and at weekends?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "who approves rollbacks at night and at weekends",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "who approves rollbacks at night and at weekends",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "What exit code means the container received SIGKILL?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "What exit code means the container received SIGKILL?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "What exit code means the container received SIGKILL?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "When does the OrdersQueueLagHigh alert fire?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "When does the OrdersQueueLagHigh alert fire?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "When does the OrdersQueueLagHigh alert fire?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "How often should updates be posted during a SEV1?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "How often should updates be posted during a SEV1?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "How often should updates be posted during a SEV1?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "How many days before expiry do certificates renew?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "How many days before expiry do certificates renew?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "How many days ahead of expiry are certificates renewed?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "What is max_connections on the main PostgreSQL cluster?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "What is max_connections on the main PostgreSQL cluster?",
+   "near_miss": false
+  },
+  {
+   "user": "asha",
+   "message": "What is max_connections on the reporting PostgreSQL cluster?",
+   "near_miss": true
+  },
+  {
+   "user": "asha",
+   "message": "What exit code means the container received SIGTERM?",
+   "near_miss": true
+  },
+  {
+   "user": "j.patel",
+   "message": "What AHI qualifies for the initial 90-day CPAP rental?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What AHI qualifies for the initial 90-day CPAP rental?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What AHI qualifies for the initial 90-day CPAP rental?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What is the decision deadline for an expedited request?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What is the decision deadline for an expedited request?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What is the decision deadline for an expedited request?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What's the deadline to decide an expedited request?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What is the decision deadline for a standard request?",
+   "near_miss": true
+  },
+  {
+   "user": "j.patel",
+   "message": "How many PT visits per condition per year don't need prior authorization?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "How many PT visits per condition per year don't need prior authorization?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What BMI qualifies for bariatric surgery without other conditions?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What BMI qualifies for bariatric surgery without other conditions?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "Without other conditions, what BMI qualifies someone for bariatric surgery?",
+   "near_miss": false
+  },
+  {
+   "user": "j.patel",
+   "message": "What BMI qualifies for bariatric surgery with a related condition?",
+   "near_miss": true
+  }
+ ]
+}

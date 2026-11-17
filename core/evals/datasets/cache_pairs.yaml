@@ -1,0 +1,35 @@
+# Semantic-cache safety set. Each pair: a question that has been answered (base) and a
+# later question (variant). same: true means the cached answer is right for the variant;
+# same: false means it would be wrong (a near-miss: almost the same words, different answer).
+corvane-freight:
+  - {base: "Who approves rollbacks at night and at weekends?", variant: "who approves rollbacks at night and at weekends", same: true}
+  - {base: "Who approves rollbacks at night and at weekends?", variant: "Who can sign off a rollback outside business hours?", same: true}
+  - {base: "What exit code means the container received SIGKILL?", variant: "Which exit code tells me the container got SIGKILL?", same: true}
+  - {base: "When does the OrdersQueueLagHigh alert fire?", variant: "What triggers the OrdersQueueLagHigh alert?", same: true}
+  - {base: "Up to how many replicas can orders-consumer be scaled?", variant: "What's the maximum replica count for orders-consumer?", same: true}
+  - {base: "How often should updates be posted during a SEV1?", variant: "During a SEV1, how frequently do we post updates?", same: true}
+  - {base: "What is max_connections on the main PostgreSQL cluster?", variant: "What's the max_connections setting on the main Postgres cluster?", same: true}
+  - {base: "How many days before expiry do certificates renew?", variant: "How many days ahead of expiry are certificates renewed?", same: true}
+  - {base: "Within how many working days is a postmortem due?", variant: "How many working days do we have to write the postmortem?", same: true}
+  - {base: "What exit code means the container received SIGKILL?", variant: "What exit code means the container received SIGTERM?", same: false}
+  - {base: "Up to how many replicas can orders-consumer be scaled?", variant: "Up to how many replicas can shipment-api be scaled?", same: false}
+  - {base: "How often should updates be posted during a SEV1?", variant: "How often should updates be posted during a SEV3?", same: false}
+  - {base: "What is max_connections on the main PostgreSQL cluster?", variant: "What is max_connections on the reporting PostgreSQL cluster?", same: false}
+  - {base: "How many days before expiry do certificates renew?", variant: "How many days before expiry do API tokens rotate?", same: false}
+  - {base: "What was the root cause of the shipment-api release 214 incident?", variant: "What was the root cause of the shipment-api release 215 incident?", same: false}
+  - {base: "Within how many working days is a postmortem due?", variant: "Within how many working days is a change request approved?", same: false}
+  - {base: "Who approves rollbacks at night and at weekends?", variant: "Who approves database migrations at night and at weekends?", same: false}
+tallowmere-health:
+  - {base: "How long must radiating back pain last before a lumbar MRI meets criterion B?", variant: "For criterion B of the lumbar MRI policy, how long does radiating back pain have to last?", same: true}
+  - {base: "How many PT visits per condition per year don't need prior authorization?", variant: "How many physical therapy visits a year, per condition, can happen without prior auth?", same: true}
+  - {base: "What AHI qualifies for the initial 90-day CPAP rental?", variant: "Which AHI is needed to qualify for the first 90-day CPAP rental?", same: true}
+  - {base: "What Epworth score is needed for a sleep study?", variant: "What Epworth Sleepiness Scale score does a sleep study require?", same: true}
+  - {base: "What BMI qualifies for bariatric surgery without other conditions?", variant: "Without other conditions, what BMI qualifies someone for bariatric surgery?", same: true}
+  - {base: "How recent must a knee X-ray be before a knee MRI?", variant: "How old can a knee X-ray be when a knee MRI is requested?", same: true}
+  - {base: "What is the decision deadline for an expedited request?", variant: "What's the deadline to decide an expedited request?", same: true}
+  - {base: "What AHI qualifies for the initial 90-day CPAP rental?", variant: "What AHI qualifies for continued CPAP coverage after 90 days?", same: false}
+  - {base: "What BMI qualifies for bariatric surgery without other conditions?", variant: "What BMI qualifies for bariatric surgery with a related condition?", same: false}
+  - {base: "How recent must a knee X-ray be before a knee MRI?", variant: "How recent must a lumbar X-ray be before a lumbar MRI?", same: false}
+  - {base: "What is the decision deadline for an expedited request?", variant: "What is the decision deadline for a standard request?", same: false}
+  - {base: "How many PT visits per condition per year don't need prior authorization?", variant: "How many chiropractic visits per year don't need prior authorization?", same: false}
+  - {base: "How long must radiating back pain last before a lumbar MRI meets criterion B?", variant: "How long must radiating neck pain last before a cervical MRI is approved?", same: false}

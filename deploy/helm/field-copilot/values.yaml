@@ -12,6 +12,7 @@ api:
   env:
     FIELD_LLM_MODE: fake          # anthropic | bedrock | recorded | fake
     FIELD_EMBEDDER: hashing       # fastembed in production
+    FIELD_ANSWER_CACHE: shadow    # shadow | on | off (deploy/load/README.md)
     APP_ENV: dev
   fault: ""                       # FIELD_FAULT, only for the canary drill
   resources:

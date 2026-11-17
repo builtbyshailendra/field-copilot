@@ -1,0 +1,527 @@
+{
+  "embedder": "BAAI/bge-small-en-v1.5",
+  "pairs": [
+    {
+      "base": "Who approves rollbacks at night and at weekends?",
+      "variant": "who approves rollbacks at night and at weekends",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.9943,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-rollback#who-can-approve"
+      ]
+    },
+    {
+      "base": "Who approves rollbacks at night and at weekends?",
+      "variant": "Who can sign off a rollback outside business hours?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.8327,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-rollback#who-can-approve"
+      ]
+    },
+    {
+      "base": "What exit code means the container received SIGKILL?",
+      "variant": "Which exit code tells me the container got SIGKILL?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.9698,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-oomkilled#what-137-means"
+      ]
+    },
+    {
+      "base": "When does the OrdersQueueLagHigh alert fire?",
+      "variant": "What triggers the OrdersQueueLagHigh alert?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.9012,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-queue-lag#symptoms"
+      ]
+    },
+    {
+      "base": "Up to how many replicas can orders-consumer be scaled?",
+      "variant": "What's the maximum replica count for orders-consumer?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.8988,
+      "terms_ok": true,
+      "sources_ok": false,
+      "cited": [
+        "pm-2026-09-orders-queue-lag#timeline"
+      ]
+    },
+    {
+      "base": "How often should updates be posted during a SEV1?",
+      "variant": "During a SEV1, how frequently do we post updates?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "skipped": "base not answered (not_in_documents)"
+    },
+    {
+      "base": "What is max_connections on the main PostgreSQL cluster?",
+      "variant": "What's the max_connections setting on the main Postgres cluster?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.9771,
+      "terms_ok": false,
+      "sources_ok": true,
+      "cited": [
+        "rb-db-connections#symptoms"
+      ]
+    },
+    {
+      "base": "How many days before expiry do certificates renew?",
+      "variant": "How many days ahead of expiry are certificates renewed?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.9818,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-tls-cert#rotation"
+      ]
+    },
+    {
+      "base": "Within how many working days is a postmortem due?",
+      "variant": "How many working days do we have to write the postmortem?",
+      "same": true,
+      "tenant": "corvane-freight",
+      "similarity": 0.9179,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-escalation#after-the-incident"
+      ]
+    },
+    {
+      "base": "What exit code means the container received SIGKILL?",
+      "variant": "What exit code means the container received SIGTERM?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.9223,
+      "terms_ok": false,
+      "sources_ok": true,
+      "cited": [
+        "rb-oomkilled#what-137-means"
+      ]
+    },
+    {
+      "base": "Up to how many replicas can orders-consumer be scaled?",
+      "variant": "Up to how many replicas can shipment-api be scaled?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.8805,
+      "terms_ok": false,
+      "sources_ok": false,
+      "cited": [
+        "pm-2026-09-orders-queue-lag#timeline"
+      ]
+    },
+    {
+      "base": "How often should updates be posted during a SEV1?",
+      "variant": "How often should updates be posted during a SEV3?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "skipped": "base not answered (not_in_documents)"
+    },
+    {
+      "base": "What is max_connections on the main PostgreSQL cluster?",
+      "variant": "What is max_connections on the reporting PostgreSQL cluster?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.9672,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-db-connections#symptoms"
+      ]
+    },
+    {
+      "base": "How many days before expiry do certificates renew?",
+      "variant": "How many days before expiry do API tokens rotate?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.7782,
+      "terms_ok": false,
+      "sources_ok": true,
+      "cited": [
+        "rb-tls-cert#rotation"
+      ]
+    },
+    {
+      "base": "What was the root cause of the shipment-api release 214 incident?",
+      "variant": "What was the root cause of the shipment-api release 215 incident?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.9277,
+      "terms_ok": false,
+      "sources_ok": true,
+      "cited": [
+        "pm-2026-03-shipment-api-503#timeline"
+      ]
+    },
+    {
+      "base": "Within how many working days is a postmortem due?",
+      "variant": "Within how many working days is a change request approved?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.6647,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-escalation#after-the-incident"
+      ]
+    },
+    {
+      "base": "Who approves rollbacks at night and at weekends?",
+      "variant": "Who approves database migrations at night and at weekends?",
+      "same": false,
+      "tenant": "corvane-freight",
+      "similarity": 0.8363,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "rb-rollback#who-can-approve"
+      ]
+    },
+    {
+      "base": "How long must radiating back pain last before a lumbar MRI meets criterion B?",
+      "variant": "For criterion B of the lumbar MRI policy, how long does radiating back pain have to last?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9517,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-114-lumbar-mri#not-medically-necessary"
+      ]
+    },
+    {
+      "base": "How many PT visits per condition per year don't need prior authorization?",
+      "variant": "How many physical therapy visits a year, per condition, can happen without prior auth?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.8931,
+      "terms_ok": false,
+      "sources_ok": true,
+      "cited": [
+        "mp-142-physical-therapy#initial-visits"
+      ]
+    },
+    {
+      "base": "What AHI qualifies for the initial 90-day CPAP rental?",
+      "variant": "Which AHI is needed to qualify for the first 90-day CPAP rental?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9757,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-150-cpap#initial-90-day-rental"
+      ]
+    },
+    {
+      "base": "What Epworth score is needed for a sleep study?",
+      "variant": "What Epworth Sleepiness Scale score does a sleep study require?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9473,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-121-sleep-study#clinical-criteria-for-any-sleep-study"
+      ]
+    },
+    {
+      "base": "What BMI qualifies for bariatric surgery without other conditions?",
+      "variant": "Without other conditions, what BMI qualifies someone for bariatric surgery?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9843,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-130-bariatric#criteria"
+      ]
+    },
+    {
+      "base": "How recent must a knee X-ray be before a knee MRI?",
+      "variant": "How old can a knee X-ray be when a knee MRI is requested?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9152,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-118-knee-mri#criteria"
+      ]
+    },
+    {
+      "base": "What is the decision deadline for an expedited request?",
+      "variant": "What's the deadline to decide an expedited request?",
+      "same": true,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9851,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "um-ops-02-timeframes#deadlines-from-cms-0057-f-as-applied-by-tallowme"
+      ]
+    },
+    {
+      "base": "What AHI qualifies for the initial 90-day CPAP rental?",
+      "variant": "What AHI qualifies for continued CPAP coverage after 90 days?",
+      "same": false,
+      "tenant": "tallowmere-health",
+      "similarity": 0.927,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-150-cpap#initial-90-day-rental"
+      ]
+    },
+    {
+      "base": "What BMI qualifies for bariatric surgery without other conditions?",
+      "variant": "What BMI qualifies for bariatric surgery with a related condition?",
+      "same": false,
+      "tenant": "tallowmere-health",
+      "similarity": 0.9449,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-130-bariatric#criteria"
+      ]
+    },
+    {
+      "base": "How recent must a knee X-ray be before a knee MRI?",
+      "variant": "How recent must a lumbar X-ray be before a lumbar MRI?",
+      "same": false,
+      "tenant": "tallowmere-health",
+      "similarity": 0.8697,
+      "terms_ok": true,
+      "sources_ok": false,
+      "cited": [
+        "mp-118-knee-mri#criteria"
+      ]
+    },
+    {
+      "base": "What is the decision deadline for an expedited request?",
+      "variant": "What is the decision deadline for a standard request?",
+      "same": false,
+      "tenant": "tallowmere-health",
+      "similarity": 0.8596,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "um-ops-02-timeframes#deadlines-from-cms-0057-f-as-applied-by-tallowme"
+      ]
+    },
+    {
+      "base": "How many PT visits per condition per year don't need prior authorization?",
+      "variant": "How many chiropractic visits per year don't need prior authorization?",
+      "same": false,
+      "tenant": "tallowmere-health",
+      "similarity": 0.8631,
+      "terms_ok": false,
+      "sources_ok": true,
+      "cited": [
+        "mp-142-physical-therapy#initial-visits"
+      ]
+    },
+    {
+      "base": "How long must radiating back pain last before a lumbar MRI meets criterion B?",
+      "variant": "How long must radiating neck pain last before a cervical MRI is approved?",
+      "same": false,
+      "tenant": "tallowmere-health",
+      "similarity": 0.829,
+      "terms_ok": true,
+      "sources_ok": true,
+      "cited": [
+        "mp-114-lumbar-mri#not-medically-necessary"
+      ]
+    }
+  ],
+  "scored": 28,
+  "skipped": 2,
+  "sweep": [
+    {
+      "threshold": 0.8,
+      "guards": "none",
+      "paraphrase_hit_rate": 1.0,
+      "wrong_hits": 11,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.8,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.933,
+      "wrong_hits": 9,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.8,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.8,
+      "wrong_hits": 6,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.85,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.933,
+      "wrong_hits": 9,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.85,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.867,
+      "wrong_hits": 7,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.85,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.733,
+      "wrong_hits": 4,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.9,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.8,
+      "wrong_hits": 5,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.9,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.8,
+      "wrong_hits": 5,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.9,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.733,
+      "wrong_hits": 3,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.92,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.6,
+      "wrong_hits": 5,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.92,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.6,
+      "wrong_hits": 5,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.92,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.533,
+      "wrong_hits": 3,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.94,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.6,
+      "wrong_hits": 2,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.94,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.6,
+      "wrong_hits": 2,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.94,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.533,
+      "wrong_hits": 2,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.96,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.467,
+      "wrong_hits": 1,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.96,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.467,
+      "wrong_hits": 1,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.96,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.4,
+      "wrong_hits": 1,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.97,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.4,
+      "wrong_hits": 0,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.97,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.4,
+      "wrong_hits": 0,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.97,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.333,
+      "wrong_hits": 0,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.98,
+      "guards": "none",
+      "paraphrase_hit_rate": 0.267,
+      "wrong_hits": 0,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.98,
+      "guards": "evidence",
+      "paraphrase_hit_rate": 0.267,
+      "wrong_hits": 0,
+      "near_misses": 13
+    },
+    {
+      "threshold": 0.98,
+      "guards": "terms + evidence",
+      "paraphrase_hit_rate": 0.267,
+      "wrong_hits": 0,
+      "near_misses": 13
+    }
+  ]
+}

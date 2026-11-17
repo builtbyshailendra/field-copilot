@@ -11,6 +11,7 @@ from __future__ import annotations
 import copy
 import itertools
 import json
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterator
@@ -60,9 +61,13 @@ class FakeProvider:
         return self
 
     # ---- Provider interface -------------------------------------------------
+    delay_s: float = 0.0  # simulated model latency, for load tests only
+
     def complete(self, request: LLMRequest, model: str) -> LLMResponse:
         # A snapshot: callers keep appending to the same message list after the call.
         self.calls.append((copy.deepcopy(request), model))
+        if self.delay_s:
+            time.sleep(self.delay_s)
         reply = self._next_reply(request)
         if isinstance(reply, LLMError):
             raise reply

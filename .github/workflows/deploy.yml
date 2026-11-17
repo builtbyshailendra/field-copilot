@@ -47,6 +47,58 @@ jobs:
       - name: terraform test (mocked AWS provider)
         run: terraform test
 
+  load:
+    name: k6 load test, answer cache off vs on (fake model, 1 s simulated per model call)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci-postgres-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      FIELD_LLM_MODE: fake
+      FIELD_EMBEDDER: hashing
+      FIELD_FAKE_LATENCY_MS: "1000"
+      FIELD_RATE_PER_MINUTE: "100000"
+      FIELD_DEMO_PASSWORD: ci-demo-password
+      PG: postgresql://postgres:ci-postgres-password@127.0.0.1:5432
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12", cache: pip, cache-dependency-path: core/pyproject.toml}
+      - run: pip install -e "core[rag,agents,api]"
+      - name: Two databases, one per run
+        run: psql "$PG/postgres" -c "CREATE DATABASE fc_off" -c "CREATE DATABASE fc_on"
+      - name: Start the API with the cache off (8020), then on (8021)
+        run: |
+          start() {
+            FIELD_ANSWER_CACHE=$1 FIELD_ADMIN_DSN="$PG/$2" FIELD_APP_DSN="postgresql://copilot_app:copilot-app-dev@127.0.0.1:5432/$2" \
+              nohup uvicorn fieldcopilot.api.app:app --host 127.0.0.1 --port $3 > api-$1.log 2>&1 &
+            for i in $(seq 1 90); do curl -sf http://127.0.0.1:$3/v1/selfcheck | grep -q score && return 0; sleep 2; done
+            cat api-$1.log; return 1
+          }
+          start off fc_off 8020
+          start on fc_on 8021
+      - uses: grafana/setup-k6-action@v1
+      - name: k6 with the cache off
+        run: k6 run -e BASE_URL=http://127.0.0.1:8020 -e PASSWORD="$FIELD_DEMO_PASSWORD" -e P95_MS=15000 --summary-export k6-cache-off.json deploy/load/ask.js
+      - name: k6 with the cache on
+        run: k6 run -e BASE_URL=http://127.0.0.1:8021 -e PASSWORD="$FIELD_DEMO_PASSWORD" -e P95_MS=15000 --summary-export k6-cache-on.json deploy/load/ask.js
+      - name: Model calls each server made
+        if: always()
+        run: for p in 8020 8021; do echo "== $p"; curl -s http://127.0.0.1:$p/metrics | grep -E '^fieldcopilot_(llm_calls|answer_cache)_total'; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-results
+          path: |
+            k6-cache-*.json
+            api-*.log
+
   kind-canary:
     name: build images, deploy to kind, eval-gated canary drill
     runs-on: ubuntu-latest

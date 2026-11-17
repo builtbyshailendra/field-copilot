@@ -16,6 +16,8 @@ LLM_TOKENS = Counter("fieldcopilot_llm_tokens_total", "Tokens", ["tenant", "dire
 LLM_COST = Counter("fieldcopilot_llm_cost_usd_total", "Estimated model spend in USD", ["tenant"], registry=REGISTRY)
 LLM_FALLBACKS = Counter("fieldcopilot_llm_fallbacks_total", "Calls served by a fallback model", ["purpose"], registry=REGISTRY)
 ANSWERS = Counter("fieldcopilot_answers_total", "Replies by outcome", ["tenant", "specialist", "outcome"], registry=REGISTRY)
+ANSWER_CACHE = Counter("fieldcopilot_answer_cache_total", "Document-answer cache lookups by outcome",
+                       ["tenant", "outcome"], registry=REGISTRY)
 APPROVALS = Counter("fieldcopilot_approvals_total", "Approval decisions", ["tenant", "status"], registry=REGISTRY)
 INJECTION_FLAGS = Counter("fieldcopilot_injection_flags_total", "Tool outputs flagged as possible injection", ["tenant"],
                           registry=REGISTRY)
@@ -45,5 +47,8 @@ def record_reply(tenant: str, reply) -> None:
     ANSWERS.labels(tenant, reply.specialist, str(outcome)).inc()
     for rule in reply.violations:
         POLICY_VIOLATIONS.labels(tenant, rule).inc()
+    for flag in reply.flags:
+        if flag.startswith("cache:"):
+            ANSWER_CACHE.labels(tenant, flag.split(":", 1)[1]).inc()
     if any("possible_injection" in f for f in reply.flags):
         INJECTION_FLAGS.labels(tenant).inc()
