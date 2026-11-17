@@ -88,6 +88,13 @@ What I take from it:
 
 Full tables: `core/evals/results/retrieval/`.
 
+### Step 6: answers that cite, and citations that are checked
+The answer prompt asks for a list of claims, each citing passage IDs and copying an exact quote. Then code checks every claim: the cited passage must have been provided, the quote must appear in it (tolerant of whitespace, curly quotes and Markdown emphasis), and every number in the claim must appear in its quote. Failing claims are dropped and reported with a reason; if none survive, the user sees "couldn't verify an answer" instead of an unchecked one. "The documents don't say" is a valid answer.
+
+Each tenant adds its own rule to the prompt (Tallowmere: never say approve or deny; Corvane: actions are proposals), and passages are wrapped as reference material, never instructions.
+
+What broke: the fake model's passage parser stopped at the first `>` inside the `source="MP-150 > Initial 90-day rental"` attribute and found no passages, so every answer became a refusal. One test caught it.
+
 ## Licence
 
 MIT
