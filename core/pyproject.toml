@@ -13,7 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 rag = ["numpy>=2", "psycopg[binary]>=3.2", "fastembed>=0.9"]
-agents = ["mcp>=2.3,<3", "pillow>=10", "scikit-learn>=1.5"]
+agents = ["mcp>=2.3,<3", "pillow>=10", "scikit-learn>=1.5", "langgraph>=1.2", "llama-index-core>=0.14"]
 
 [build-system]
 requires = ["setuptools>=69"]

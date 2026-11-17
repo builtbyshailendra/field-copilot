@@ -193,6 +193,12 @@ So about 60% of messages skip an LLM call with no routing errors, and the three 
 
 What broke: a leakage test failed on the first run. One training template ("what does exit code 137 mean") was word-for-word a test question. Reworded; the numbers above are after the fix.
 
+### Step 15: the same pieces in LangGraph and LlamaIndex
+- **LangGraph:** Tallowmere's case review as a state graph (fetch case → missing documents → policy → draft letter → **`interrupt()` for the nurse** → send or not → summary), with a checkpointer so the approval can arrive later. Tests show it pauses, sends only after `Command(resume=...)`, sends nothing on rejection, and skips the letter when nothing is missing. One model call instead of three to five.
+- **LlamaIndex:** the retrieval side over the same chunks, with my embedder wrapped as a LlamaIndex embedding model. With the same embeddings it ranks the same as mine (MRR within 0.02, checked in a test). The gains in Step 5 came from hybrid search and reranking, not from the framework.
+
+My conclusion, with line counts and trade-offs in `docs/frameworks-comparison.md`: a graph for fixed procedures (case review), an agent loop for open-ended work (investigations), the same approval rules either way.
+
 ## Licence
 
 MIT
