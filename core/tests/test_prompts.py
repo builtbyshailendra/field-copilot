@@ -47,14 +47,14 @@ def test_request_carries_prompt_settings():
 
 def test_lab_runs_every_variant_and_reports_errors_per_row():
     examples = lab.load_examples("route")
-    assert len(examples) == 36 and sum("tricky" in e.tags for e in examples) == 4
+    assert len(examples) == 37 and sum("tricky" in e.tags for e in examples) == 5
     fake = FakeProvider().on("route", keyword_route)
     llm = LLM(fake, models=dict(FAKE_MODELS))
     results = [lab.run(llm, p, examples, lab.RouteDecision, lambda d: d.route, v)
                for v, p in lab.variants("route", PromptRegistry())]
     assert [r.variant for r in results] == ["baseline", "v2_examples"]
     assert results[0].version != results[1].version
-    assert results[0].provider == "fake" and results[0].errors == 0 and results[0].n == 36
+    assert results[0].provider == "fake" and results[0].errors == 0 and results[0].n == 37
     table = lab.to_markdown(results)
     assert "| baseline |" in table and "fake" in table
 

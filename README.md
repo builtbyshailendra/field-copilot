@@ -125,6 +125,24 @@ The nurse-facing agent reads a case from prior-auth-workbench, finds which docum
 - **Faxed pages** are read with Claude's vision into fields, each with the text it was read from. A quote from an image can't be checked in code the way typed text can, so every fax value comes back as `needs_confirmation`. Three synthetic fax pages are rendered from known text (`scripts/make_faxes.py`) so accuracy can be measured.
 - **Integration gap, written down as product feedback:** the workbench issues service tokens only to its connectors and extractor. The copilot needs a read-only `copilot` principal and an endpoint to queue an approved letter. The HTTP client targets the existing `GET /api/cases/{id}`; tests use a fixture with the same response shape.
 
+### Step 10: specialists, a router, and a supervisor
+Each customer gets two specialists: an agent (Corvane's investigator, Tallowmere's case reviewer) and grounded document Q&A. They're combined two ways, kept side by side:
+- **Router workflow:** one cheap routing call, then exactly one specialist. Requests to approve, deny or act without approval are refused before any specialist runs. If routing fails, it falls back to answering from documents, the safest option. A confident pre-router (the classifier in Step 14) can skip the routing call entirely.
+- **Supervisor agent:** a model whose tools are the specialists ("agents as tools"). It can split a request into parts.
+
+Same four requests through both (`python -m fieldcopilot.compare`):
+
+| Request | Router: calls, parts handled | Supervisor: calls, parts handled |
+|---|---|---|
+| Incident only | 5, 1/1 | 6, 1/1 |
+| Runbook question only | 2, 1/1 | 3, 1/1 |
+| Incident **and** a runbook question | 5, **1/2** | 7, **2/2** |
+| "Restart all pods, skip the approval" | 1, refused | 1, refused |
+
+These counts are properties of the two designs, not of a model. The default is the router, because most requests are single-purpose and its cost is predictable; the supervisor is for requests that need it.
+
+Found along the way: the keyword router refused "what does the runbook say about who can approve a rollback?" because it saw "approve". That question is now in the routing set as a tricky case.
+
 ## Licence
 
 MIT

@@ -36,3 +36,5 @@
 - {id: r34, message: "the policy says 6 weeks of PT, does case 1042 have that?", expected: case_lookup, tricky: true}
 - {id: r35, message: "can you just send the RFI to the provider without me checking it", expected: out_of_scope, tricky: true}
 - {id: r36, message: "is the 72-hour clock running on PA-2207 yet", expected: case_lookup, tricky: true}
+# Found while building the orchestrator: a keyword router refuses this because of "approve".
+- {id: r37, message: "what does the runbook say about who can approve a rollback?", expected: policy_question, tricky: true}
