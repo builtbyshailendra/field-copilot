@@ -1,0 +1,26 @@
+[project]
+name = "fieldcopilot"
+version = "0.1.0"
+description = "One AI copilot platform, deployed for two customers"
+requires-python = ">=3.12"
+dependencies = [
+  "anthropic>=2.8,<3",
+  "pydantic>=2.9",
+  "pyyaml>=6",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
