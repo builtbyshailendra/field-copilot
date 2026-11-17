@@ -1,0 +1,68 @@
+# Synthetic cases in the shape prior-auth-workbench's GET /api/cases/{id} returns (trimmed).
+# `documents_present` lists document types on file. `truth` is for the evaluation only.
+- id: 1042
+  state: in_review
+  priority: standard
+  member: {id: "TM-55012", name: "Synthetic Member A"}
+  provider: {npi: "1234567893", name: "Dr. A. Okafor, Riverside Spine Clinic"}
+  service: {code: "72148", name: "MRI lumbar spine without contrast"}
+  received_at: "2026-11-15T09:10:00+00:00"
+  due_at: "2026-11-22T09:10:00+00:00"
+  documents_present: [clinical_notes, conservative_therapy_record]
+  facts:
+    - {field: symptom_duration_weeks, label: "Symptom duration (weeks)", value: "8", status: verified, quote: "Low back pain radiating to the left leg for 8 weeks."}
+    - {field: conservative_therapy_weeks, label: "Conservative therapy (weeks)", value: "3", status: verified, quote: "Completed 3 weeks of physical therapy, stopped due to travel."}
+    - {field: red_flags, label: "Red-flag symptoms", value: "false", status: verified, quote: "No bowel or bladder changes, no weakness."}
+  truth: {missing: [], criteria_question: "Does case 1042 meet MP-114?", answer_gist: "conservative therapy 3 of 6 weeks"}
+- id: 2207
+  state: pended
+  priority: expedited
+  member: {id: "TM-71880", name: "Synthetic Member B"}
+  provider: {npi: "1588667638", name: "Dr. L. Moreau, Northgate Orthopedics"}
+  service: {code: "73721", name: "MRI knee without contrast"}
+  received_at: "2026-11-17T06:00:00+00:00"
+  due_at: "2026-11-20T06:00:00+00:00"
+  documents_present: [clinical_notes]
+  facts:
+    - {field: mechanical_symptoms, label: "Mechanical symptoms", value: "true", status: verified, quote: "Reports the knee locking twice since the fall."}
+    - {field: xray_within_60_days, label: "X-ray in last 60 days", value: "unknown", status: not_documented, quote: ""}
+  truth: {missing: [knee_xray_report]}
+- id: 3310
+  state: pended
+  priority: standard
+  member: {id: "TM-30944", name: "Synthetic Member C"}
+  provider: {npi: "1245319599", name: "Dr. R. Iyer, Lakeview Sleep Center"}
+  service: {code: "95810", name: "In-lab polysomnography"}
+  received_at: "2026-11-14T13:00:00+00:00"
+  due_at: "2026-11-21T13:00:00+00:00"
+  documents_present: [sleep_questionnaire]
+  facts:
+    - {field: epworth_score, label: "Epworth score", value: "14", status: verified, quote: "Epworth Sleepiness Scale 14 on 11/02."}
+    - {field: bmi, label: "BMI", value: "unknown", status: not_documented, quote: ""}
+  truth: {missing: [bmi_record, hsat_report_or_reason]}
+- id: 4120
+  state: in_review
+  priority: standard
+  member: {id: "TM-81233", name: "Synthetic Member D"}
+  provider: {npi: "1972583468", name: "Dr. P. Haddad, Westfield Surgical"}
+  service: {code: "43644", name: "Laparoscopic gastric bypass"}
+  received_at: "2026-11-12T10:00:00+00:00"
+  due_at: "2026-11-19T10:00:00+00:00"
+  documents_present: [weight_history, program_notes, dietitian_note]
+  facts:
+    - {field: bmi, label: "BMI", value: "42.1", status: verified, quote: "BMI 42.1 at today's visit."}
+    - {field: program_months, label: "Supervised program (months)", value: "4", status: verified, quote: "Completed a 4-month supervised weight-management program with monthly visits."}
+  truth: {missing: [psych_evaluation]}
+- id: 5005
+  state: in_review
+  priority: standard
+  member: {id: "TM-11902", name: "Synthetic Member E"}
+  provider: {npi: "1407987620", name: "Harbor Physical Therapy"}
+  service: {code: "97110", name: "Physical therapy beyond 12 visits"}
+  received_at: "2026-11-16T15:00:00+00:00"
+  due_at: "2026-11-23T15:00:00+00:00"
+  documents_present: [pt_evaluation, progress_note, plan_of_care]
+  facts:
+    - {field: visits_used, label: "Visits used this year", value: "12", status: verified, quote: "Visit 12 of 12 authorized."}
+    - {field: functional_progress, label: "Measured progress", value: "true", status: verified, quote: "Knee flexion improved from 85 to 110 degrees."}
+  truth: {missing: []}

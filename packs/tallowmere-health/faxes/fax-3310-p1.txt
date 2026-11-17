@@ -1,0 +1,8 @@
+LAKEVIEW SLEEP CENTER           FAX 1-555-0190     11/14/2026 12:40  P.1/1
+SLEEP STUDY REFERRAL
+Member ID: TM-30944
+Ordering provider: Dr. R. Iyer
+Requested: Attended polysomnography   CPT: 95810
+ICD-10: G47.33
+Loud snoring and witnessed apneas for 26 weeks. Epworth 14.
+Home sleep test: not done.

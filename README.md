@@ -117,6 +117,14 @@ A rules baseline applies the runbooks' checks in a fixed order, with no model. I
 
 The out-of-sample check is the **kind lab** (`lab/run_lab.py`, workflow `kubernetes-lab`): CI creates a real cluster, injects five failures (a crashing release, a bad image tag, an OOM kill, a failing readiness probe, a renamed ConfigMap key), investigates each from live `kubectl` output, checks the evidence, approves the proposed rollback, and waits for the service to recover. Writing it changed two rules: live clusters report `ErrImagePull` before `ImagePullBackOff` and `CreateContainerConfigError` rather than a crash loop, and "config changed after the last deploy" is a better rule than "no recent deploy", because in a lab everything was deployed a minute ago.
 
+### Step 9: Tallowmere's case reviewer, RFI letters and faxed pages
+The nurse-facing agent reads a case from prior-auth-workbench, finds which documents the governing policy requires and which are missing, looks up the policy's criteria, reports each criterion as met, not met or unknown with the quote it relies on, and proposes **one** request-for-information letter listing every missing item. It never recommends approval or denial.
+
+- **Minimum necessary:** member names and NPIs are removed before a case reaches a prompt.
+- **Letters follow UM-OPS-01 by construction.** The model decides which items are missing; the wording comes from a template that always includes the request ID, the service, each item with the policy that requires it, the deadline (14 calendar days, or 2 business days for expedited, skipping weekends), how to send documents, and the nurse's callback. The tool refuses items the policy doesn't require, and the nurse approves the exact letter before it's queued.
+- **Faxed pages** are read with Claude's vision into fields, each with the text it was read from. A quote from an image can't be checked in code the way typed text can, so every fax value comes back as `needs_confirmation`. Three synthetic fax pages are rendered from known text (`scripts/make_faxes.py`) so accuracy can be measured.
+- **Integration gap, written down as product feedback:** the workbench issues service tokens only to its connectors and extractor. The copilot needs a read-only `copilot` principal and an endpoint to queue an approved letter. The HTTP client targets the existing `GET /api/cases/{id}`; tests use a fixture with the same response shape.
+
 ## Licence
 
 MIT

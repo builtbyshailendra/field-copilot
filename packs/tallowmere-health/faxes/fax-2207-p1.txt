@@ -1,0 +1,8 @@
+NORTHGATE ORTHOPEDICS           FAX 1-555-0181     11/17/2026 05:55  P.1/2
+URGENT - PRIOR AUTH
+Member ID: TM-71880
+Ordering provider: Dr. L. Moreau
+Requested: MRI knee without contrast   CPT: 73721
+ICD-10: S83.241A
+History: Twisting injury at football. Knee locking twice since the fall, for 2 weeks.
+X-ray: not yet performed.

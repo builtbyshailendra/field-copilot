@@ -1,0 +1,24 @@
+# Which policy governs each service, and the documents it requires (from each policy's
+# "Required documentation" section). Used by list_missing_documents and RFI drafting.
+"72148": {policy: mp-114-lumbar-mri, name: "MRI lumbar spine without contrast", required: [clinical_notes, conservative_therapy_record]}
+"73721": {policy: mp-118-knee-mri, name: "MRI knee without contrast", required: [clinical_notes, knee_xray_report]}
+"95810": {policy: mp-121-sleep-study, name: "In-lab polysomnography", required: [sleep_questionnaire, bmi_record, hsat_report_or_reason]}
+"43644": {policy: mp-130-bariatric, name: "Laparoscopic gastric bypass", required: [weight_history, program_notes, psych_evaluation, dietitian_note]}
+"97110": {policy: mp-142-physical-therapy, name: "Physical therapy beyond 12 visits", required: [pt_evaluation, progress_note, plan_of_care]}
+"E0601": {policy: mp-150-cpap, name: "CPAP device", required: [sleep_study_report, clinician_order]}
+labels:
+  clinical_notes: "Clinical notes describing the symptoms and their duration"
+  conservative_therapy_record: "Record of conservative therapy tried, with dates"
+  knee_xray_report: "Knee X-ray report from the last 60 days"
+  sleep_questionnaire: "Sleep questionnaire score (Epworth or STOP-BANG) with its date"
+  bmi_record: "BMI recorded within the last 6 months"
+  hsat_report_or_reason: "Home sleep apnea test report, or the documented reason it is unreliable"
+  weight_history: "Weight and BMI history for the last 2 years"
+  program_notes: "Supervised weight-management program visit notes"
+  psych_evaluation: "Psychological evaluation report from the last 12 months"
+  dietitian_note: "Registered dietitian consultation note"
+  pt_evaluation: "Initial physical therapy evaluation"
+  progress_note: "Most recent progress note with measurements"
+  plan_of_care: "Updated plan of care with the number of visits requested"
+  sleep_study_report: "Sleep study report with the AHI"
+  clinician_order: "Prescribing clinician's order"

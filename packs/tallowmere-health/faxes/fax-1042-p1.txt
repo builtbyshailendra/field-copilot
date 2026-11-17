@@ -1,0 +1,9 @@
+RIVERSIDE SPINE CLINIC          FAX 1-555-0177     11/15/2026 09:02  P.1/1
+PRIOR AUTHORIZATION REQUEST - IMAGING
+Member ID: TM-55012
+Ordering provider: Dr. A. Okafor
+Requested: MRI lumbar spine without contrast   CPT: 72148
+ICD-10: M54.16
+History: Low back pain radiating to the left leg for 8 weeks.
+Treatment: Completed 3 weeks of physical therapy, stopped due to travel.
+No bowel or bladder changes. No weakness.
