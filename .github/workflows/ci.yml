@@ -22,7 +22,7 @@ jobs:
           cache: pip
           cache-dependency-path: core/pyproject.toml
       - name: Install
-        run: pip install -e "core[dev,rag]"
+        run: pip install -e "core[dev,rag,agents]"
       - name: Test
         working-directory: core
         run: python -m pytest

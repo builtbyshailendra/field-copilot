@@ -14,7 +14,7 @@ approvals:
   expires_minutes: 15
 tools:
   enabled: [search_runbooks, get_pods, get_events, get_logs, query_metrics, get_deploy_history,
-            propose_rollback, propose_scale, propose_restart]
+            get_config_changes, propose_rollback, propose_scale, propose_restart, propose_flag]
 retrieval:
   corpus: corpus
   top_k: 6

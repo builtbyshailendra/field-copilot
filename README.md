@@ -143,6 +143,13 @@ These counts are properties of the two designs, not of a model. The default is t
 
 Found along the way: the keyword router refused "what does the runbook say about who can approve a rollback?" because it saw "approve". That question is now in the routing set as a tricky case.
 
+### Step 11: an MCP server per customer
+Engineers and nurses can use the copilot's tools from their own AI clients (Claude Desktop, Claude Code) through MCP, under the same rules as the copilot's own agent: only the tenant's tools, never the tools that act, read-only tools annotated as such, and proposal tools that create an approval request and say nothing ran. Every call is audited with the caller.
+
+Local use takes the caller from the environment (stdio). The shared HTTP server takes bearer tokens stored only as SHA-256 hashes, each bound to one user and one tenant; a token for the other tenant is rejected. Setup for both is in `docs/mcp.md`.
+
+What broke: the MCP Python SDK is now version 2, where `FastMCP` became `MCPServer` and the client exposes snake_case fields (`read_only_hint`, `input_schema`). I read the installed SDK instead of writing from memory; tests use its in-memory client.
+
 ## Licence
 
 MIT
