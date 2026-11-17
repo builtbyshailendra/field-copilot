@@ -285,6 +285,27 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
             raise HTTPException(404, "No such job")
         return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in row.items()}
 
+    @app.post("/v1/voice-notes")
+    async def voice_note(request: Request, user: User = Depends(current_user)) -> dict:
+        """Body: a 16-bit PCM WAV (audio/wav), up to 5 MB. Transcribed locally; nothing leaves the server."""
+        body = await request.body()
+        if not body or len(body) > 5 * 1024 * 1024 or not body.startswith(b"RIFF"):
+            raise HTTPException(400, "Send a WAV file under 5 MB")
+        import tempfile
+
+        from fieldcopilot.voice import transcribe
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            f.write(body)
+            path = f.name
+        try:
+            note = transcribe(path)
+        finally:
+            os.unlink(path)
+        Audit(db, user.tenant)("voice_note.added", {"user": user.name, "transcript": note.transcript,
+                                                    "services": note.services, "actions_mentioned": note.actions_mentioned})
+        return to_jsonable(note)
+
     @app.get("/v1/admin/prompts")
     def prompts(user: User = Depends(current_user)) -> list[dict]:
         return PromptRegistry(pack_dirs={user.tenant: load_pack(user.tenant).prompts_dir}).catalogue()

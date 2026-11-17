@@ -227,6 +227,13 @@ Three Playwright tests drive it in a real browser against the real API and Postg
 
 What broke: Next.js renders its own empty `role="alert"` route announcer, so the first test matched two alerts; it now filters by text. And model steps showed a bare `{}` in the progress list until I made them say which tools the model asked for.
 
+### Step 18: voice notes, transcribed on the machine
+During an incident, typing is slow. `POST /v1/voice-notes` takes a WAV voice note and transcribes it locally with faster-whisper (Whisper base.en, int8 on CPU), so no audio leaves the server. The note becomes a timeline entry: the transcript (redacted), the services it mentions ("shipment api" normalised to `shipment-api`), and any action it *talks about*, labelled as not an action taken.
+
+Measured on a synthetic note (made with Windows text-to-speech, 13.3 s): transcribed in 6.1 s on a laptop CPU including model load. Word error rate is 6.7% against the written-form script; the one real miss is "on-call" heard as "uncall". The test asserts under 15%.
+
+What broke: faster-whisper's own audio decoder calls PyAV with an argument newer PyAV releases removed. I decode the WAV with the standard library instead and pass the samples to the model, which also drops a dependency.
+
 ## Licence
 
 MIT
