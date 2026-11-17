@@ -239,7 +239,8 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
                           "route": reply.route, "status": reply.status, "answer": reply.text,
                           "result": to_jsonable(reply.payload) if not isinstance(reply.payload, list) else
                           [to_jsonable(p) for p in reply.payload],
-                          "trace": reply.trace, "cost_usd": reply.cost_usd, "idempotency_key": (idempotency_key or None)}
+                          "trace": reply.trace, "cost_usd": reply.cost_usd, "idempotency_key": (idempotency_key or None),
+                          "flags": reply.flags}
                 runs.save(user.tenant, record)
                 obs_metrics.record_reply(user.tenant, reply)
                 events.put(("answer", {"run_id": run_id, "route": reply.route, "specialist": reply.specialist,

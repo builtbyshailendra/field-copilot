@@ -79,6 +79,7 @@ def test_investigation_streams_steps_then_answer_and_persists_the_run(client):
     assert answer["specialist"] == "investigate" and answer["approvals"]
     run = client.get(f"/v1/runs/{answer['run_id']}", headers=headers).json()
     assert run["route"] == "investigate_incident" and run["trace"] and run["result"]["hypotheses"][0]["cause"] == "bad_release"
+    assert run["flags"] == answer["flags"]  # guardrail flags are kept with the run for audit
 
 
 def test_approval_needs_the_right_role_and_runs_once(client):

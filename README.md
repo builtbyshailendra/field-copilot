@@ -11,7 +11,7 @@ Same platform code; each customer is a **pack** of documents, tools, prompts and
 
 ## Status
 
-Being built step by step. See the build log below.
+All 24 steps of the plan are built and tested on synthetic data with a scripted stand-in for the model; nothing here has run against a real customer or been measured with Claude yet (that's week 1 of the [pilot plans](docs/delivery/pilot-plans.md)). The build log below says, step by step, what was checked and how.
 
 | Area | What's in it | Status |
 |---|---|---|
@@ -21,14 +21,35 @@ Being built step by step. See the build log below.
 | Agents | Tools, budgets, approvals, memory, supervisor + specialists, MCP server, guardrails | ✅ Steps 7–12 |
 | Evaluation | Retrieval, faithfulness, agent success, safety; judge calibration; CI gates; ML router; LangGraph/LlamaIndex comparison | ✅ Steps 13–15 |
 | Product | FastAPI + SSE, multi-tenant RLS, Next.js app, voice notes | ✅ Steps 16–18 |
-| Production | OTel traces, Prometheus/Grafana, Helm, Argo CD, eval-gated canary, SBOM/signing, Terraform for AWS | ⏳ Steps 19–23 |
-| Delivery | Security questionnaire, pilot plan, ROI, runbooks, handover | ⏳ Step 24 |
+| Production | OTel traces, Prometheus/Grafana, Helm, Argo CD, eval-gated canary, SBOM/signing, Terraform for AWS, load tests | ✅ Steps 19–23 |
+| Delivery | Security questionnaire, pilot plans, ROI, runbook, handover and training, product feedback, demo script | ✅ Step 24 |
 
 ## Where to start reading
 
 1. `docs/discovery/corvane-freight/README.md` and `docs/discovery/tallowmere-health/README.md`: what each customer needs, and how success is measured
 2. `docs/architecture.md`: how a question flows through the system
 3. `docs/decisions/`: the choices and their trade-offs
+4. `docs/deployment-options.md`: where it runs and where each kind of data lives
+5. `docs/delivery/`: what a customer gets: [security questionnaire](docs/delivery/security-questionnaire.md), [pilot plans](docs/delivery/pilot-plans.md), [ROI](docs/delivery/roi.md), [handover and training](docs/delivery/handover-and-training.md), [product feedback](docs/delivery/product-feedback.md), [demo script](docs/delivery/demo-script.md), and the [runbook](docs/operations/runbook.md)
+
+## Run it locally
+
+Python 3.12, Node 22 and PostgreSQL 16. No model key needed: the fake model is the default.
+
+```bash
+pip install -e "core[dev,rag,agents,api]"
+createdb -h 127.0.0.1 -U postgres fieldcopilot
+export FIELD_ADMIN_DSN=postgresql://postgres@127.0.0.1:5432/fieldcopilot
+export FIELD_APP_DSN=postgresql://copilot_app:copilot-app-dev@127.0.0.1:5432/fieldcopilot
+export FIELD_DEMO_PASSWORD=pick-one
+uvicorn fieldcopilot.api.app:app --port 8020
+```
+
+```bash
+cd web && npm ci && npm run dev -- -p 3100
+```
+
+Sign in at http://127.0.0.1:3100 as `asha` or `ravi` (Corvane) or `j.patel` (Tallowmere) with that password. Tests: `cd core && python -m pytest`; evaluation gates: `python -m fieldcopilot.evals.suite --gate`.
 
 ## Build log
 
@@ -274,6 +295,17 @@ Checked on my machine: `terraform fmt`, `validate`, and `terraform test` with a 
 - **The threshold came from a measurement, not a guess.** On 30 paraphrase and near-miss pairs, bge-small at the "usual" 0.90 would have answered **5 of 13 near-miss questions with another question's answer**. The identifier and evidence guards cut that to 3; only at 0.97 does it reach 0, and the closest near-miss sits at 0.967. Default 0.98. Because 0 of 13 is a small sample, the API ships in **shadow mode**: it records what it would have served and whether a fresh answer agreed, so a customer can check on its own traffic before turning it on.
 - **Load tests:** k6 in CI against the API with the cache off and on (thresholds on errors, p95, and near-misses served from cache), plus a standard-library runner for a laptop. Local run, fake model with 1 s per model call, 12 users for 60 s: answer-model calls per request **0.75 → 0.15**, p50 **2.1 s → 1.1 s**, throughput **3.6 → 4.45 req/s**, 0 errors, **0 near-misses given another question's answer**. p95 didn't move, because the slow tail is a question routed to the investigator, which is never cached. Details and caveats in `deploy/load/README.md`.
 - **What the load test found:** the scripted case reviewer crashed on questions routed to case lookup without a case number (38 errors in the first run; fixed), and two document questions are misrouted ("decision deadline for an expedited request" goes to case lookup; "when does the alert fire" goes to the investigator). Both are logged as router training candidates.
+
+### Step 24: what a customer actually gets
+The delivery pack, written the way it would be handed to a sponsor and their security team:
+- **[Security questionnaire](docs/delivery/security-questionnaire.md):** data, residency, encryption, identity, AI-specific controls, supply chain, resilience, subprocessors. Each answer points to the code, or says plainly what isn't built (no SSO yet, no mTLS inside the cluster, no SOC 2).
+- **[Pilot plans](docs/delivery/pilot-plans.md):** six weeks per customer, shadow mode first, with the discovery metrics, weekly exit checks, roles, and conditions that stop the pilot. Week 1 replaces the fake-model numbers with Claude's.
+- **[ROI](docs/delivery/roi.md),** generated by a script from stated assumptions and the platform's own price table. It says something useful: for Corvane, engineer time alone only breaks even, so the business case has to rest on the cost of customer-visible downtime. For Tallowmere, nurse time carries it.
+- **[Runbook](docs/operations/runbook.md)** behind every alert's link, plus rollback, kill switches from least to most drastic, rotating secrets and tokens, reindexing, and data deletion.
+- **[Handover and training](docs/delivery/handover-and-training.md)** by audience, and **[product feedback](docs/delivery/product-feedback.md):** 14 findings from the field, each with evidence and a suggested fix. Two of them are already fixed in this repo.
+- **[Demo script](docs/delivery/demo-script.md),** every question checked against the running API first. That check caught that the obvious "I don't know" question is the fake model's one known false answer, so the script uses another.
+
+Found while writing the runbook: guardrail flags (possible injection, secrets redacted, cache outcome) reached the user but weren't stored with the run. Runs now keep them, with an idempotent migration and an API test.
 
 ## Licence
 

@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   locked_by text, locked_at timestamptz, result jsonb, created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS jobs_ready ON jobs (tenant, status, run_after);
+-- Guardrail flags (possible injection, secrets redacted, cache outcome) kept with each run for audit.
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS flags jsonb NOT NULL DEFAULT '[]';
 
 CREATE OR REPLACE FUNCTION audit_append_only() RETURNS trigger AS $$
 BEGIN RAISE EXCEPTION 'audit_log is append-only'; END $$ LANGUAGE plpgsql;

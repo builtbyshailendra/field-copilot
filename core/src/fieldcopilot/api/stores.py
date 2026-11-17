@@ -70,10 +70,11 @@ class Runs:
         with self.db.tenant(tenant) as conn:
             conn.execute(
                 """INSERT INTO runs (id, tenant, username, kind, question, route, status, answer, result, trace, cost_usd,
-                                     idempotency_key)
+                                     idempotency_key, flags)
                    VALUES (%(id)s, %(tenant)s, %(username)s, %(kind)s, %(question)s, %(route)s, %(status)s, %(answer)s,
-                           %(result)s, %(trace)s, %(cost_usd)s, %(idempotency_key)s)""",
-                {**run, "tenant": tenant, "result": Jsonb(run.get("result")), "trace": Jsonb(run.get("trace", []))})
+                           %(result)s, %(trace)s, %(cost_usd)s, %(idempotency_key)s, %(flags)s)""",
+                {**run, "tenant": tenant, "result": Jsonb(run.get("result")), "trace": Jsonb(run.get("trace", [])),
+                 "flags": Jsonb(run.get("flags", []))})
 
     def get(self, tenant: str, run_id: str) -> dict | None:
         with self.db.tenant(tenant) as conn:
