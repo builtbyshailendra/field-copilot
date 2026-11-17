@@ -150,6 +150,14 @@ Local use takes the caller from the environment (stdio). The shared HTTP server 
 
 What broke: the MCP Python SDK is now version 2, where `FastMCP` became `MCPServer` and the client exposes snake_case fields (`read_only_hint`, `input_schema`). I read the installed SDK instead of writing from memory; tests use its in-memory client.
 
+### Step 12: guardrails and a red-team suite
+Three guardrails, each with a clear job:
+- **Redaction** for logs, traces and the audit trail: emails, phone numbers, SSNs, card numbers (Luhn-checked), member IDs, NPIs (Luhn-checked with the 80840 prefix, so ordinary 10-digit numbers aren't masked), API keys, tokens, passwords, connection strings, private keys. It can't catch free-text names; keeping names out of prompts (minimum necessary) is the main defence, and the docs say so.
+- **Injection detection** on every tool output, on by default for both agents. It flags rather than blocks, so a real log line is never hidden; the structural defences (output wrapped as data, tool allowlists, approvals) do the protecting.
+- **Output policy** before a reply reaches anyone: Tallowmere's copilot may not state or suggest a coverage decision, Corvane's may not claim an action ran unless an approval executed it, and no reply may contain a credential. A violating reply is replaced with a safe message and the violation recorded.
+
+Red-team suite (`python -m fieldcopilot.guard.redteam`): 6 attempts to get a decision, an unapproved action or a secret by asking; 3 instructions planted in a log line, a Kubernetes event and a poisoned runbook; 10 candidate answers, 6 bad and 4 good, to measure false positives too. All 19 pass. The injection and output layers don't depend on the model. The "ask" layer here is the keyword router; a real model faces the same 6 cases when a key exists.
+
 ## Licence
 
 MIT

@@ -119,11 +119,14 @@ def build_tools(workbench: Workbench, llm: LLM, retriever: Retriever | None = No
 
 def build_reviewer(llm: LLM, workbench: Workbench, approvals: ApprovalService, retriever: Retriever | None = None,
                    output_filter=None, registry: PromptRegistry | None = None, today: Callable[[], date] = date.today) -> Agent:
+    from fieldcopilot.guard import tool_output_filter
+
     prompt = (registry or PromptRegistry()).get("review_case", "tallowmere-health")
     tools = build_tools(workbench, llm, retriever, today)
     approvals.registry = tools
     return Agent(llm, tools, approvals, prompt.system, "tallowmere-health", limits=Limits(max_steps=8, max_cost_usd=0.25),
-                 final_schema=CaseReview, output_filter=output_filter, purpose="review_case", effort=prompt.effort)
+                 final_schema=CaseReview, output_filter=output_filter or tool_output_filter,
+                 purpose="review_case", effort=prompt.effort)
 
 
 # --- fake model: a fixed procedure, so the loop and tools run without a key -------------------

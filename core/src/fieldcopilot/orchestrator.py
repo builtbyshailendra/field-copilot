@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict
 
 from fieldcopilot.agent import Agent, ApprovalService, Limits, Tool, ToolRegistry
 from fieldcopilot.answer.grounded import GroundedAnswerer
+from fieldcopilot.guard.policy import check as policy_check
 from fieldcopilot.llm import LLM, Budget, LLMError
 from fieldcopilot.prompts import PromptRegistry
 from fieldcopilot.prompts.lab import RouteDecision
@@ -38,6 +39,7 @@ class Reply:
     model_calls: int = 0
     cost_usd: float = 0.0
     approvals: list[str] = field(default_factory=list)
+    violations: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -83,6 +85,13 @@ class Copilot:
         return reply
 
     def _dispatch(self, route: str, message: str, session: str | None, budget: Budget) -> Reply:
+        reply = self._specialist(route, message, session, budget)
+        verdict = policy_check(self.s.tenant, reply.text)
+        if not verdict.ok:  # the reply never reaches the user in breach of the tenant's output policy
+            reply.violations, reply.text = verdict.violations, verdict.text
+        return reply
+
+    def _specialist(self, route: str, message: str, session: str | None, budget: Budget) -> Reply:
         if route == "out_of_scope":
             return Reply(route, "refusal", REFUSAL)
         if route in (self.s.agent_route, "case_lookup", "draft_letter") or (

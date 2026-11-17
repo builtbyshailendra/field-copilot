@@ -62,6 +62,21 @@ def corvane_copilot(llm: LLM) -> tuple[Copilot, FixtureCluster]:
     return Copilot(llm, specialists, approvals), cluster
 
 
+def tallowmere_copilot(llm: LLM):
+    from fieldcopilot.tenants.tallowmere.tools import build_reviewer
+    from fieldcopilot.tenants.tallowmere.workbench import FixtureWorkbench
+
+    pack = load_pack("tallowmere-health")
+    index = MemoryIndex(HashingEmbedder(), pack.id)
+    index.add(chunk_corpus(load_corpus(pack.corpus_dir, pack.id)))
+    retriever = Retriever(index, "hybrid")
+    workbench = FixtureWorkbench.from_pack()
+    approvals = ApprovalService(None, {"tallowmere-health": "review-nurse"})
+    agent = build_reviewer(llm, workbench, approvals, retriever)
+    specialists = Specialists(pack.id, GroundedAnswerer(llm, retriever, pack.id), agent, "case_lookup")
+    return Copilot(llm, specialists, approvals), workbench
+
+
 @dataclass
 class Row:
     request: str

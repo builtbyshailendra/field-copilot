@@ -80,12 +80,15 @@ def check_evidence(report: Investigation, run: AgentRun) -> EvidenceCheck:
 
 def build_investigator(llm: LLM, cluster: Cluster, approvals: ApprovalService, retriever: Retriever | None = None,
                        limits: Limits | None = None, output_filter=None, registry: PromptRegistry | None = None) -> Agent:
+    from fieldcopilot.guard import tool_output_filter
+
     prompt = (registry or PromptRegistry()).get("investigate", "corvane-freight")
     tools = build_tools(cluster, retriever)
     approvals.registry = tools  # approvals execute against this cluster's "acts" tools
     return Agent(llm, tools, approvals, prompt.system, "corvane-freight",
                  allowlist=None, limits=limits or Limits(max_steps=10, max_cost_usd=0.5),
-                 final_schema=Investigation, output_filter=output_filter, purpose="investigate", effort=prompt.effort)
+                 final_schema=Investigation, output_filter=output_filter or tool_output_filter,
+                 purpose="investigate", effort=prompt.effort)
 
 
 # ---------------------------------------------------------------------------------------------
