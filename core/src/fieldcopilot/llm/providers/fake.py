@@ -8,6 +8,7 @@ accident on an unscripted call.
 """
 from __future__ import annotations
 
+import copy
 import itertools
 import json
 from collections import deque
@@ -60,7 +61,8 @@ class FakeProvider:
 
     # ---- Provider interface -------------------------------------------------
     def complete(self, request: LLMRequest, model: str) -> LLMResponse:
-        self.calls.append((request, model))
+        # A snapshot: callers keep appending to the same message list after the call.
+        self.calls.append((copy.deepcopy(request), model))
         reply = self._next_reply(request)
         if isinstance(reply, LLMError):
             raise reply

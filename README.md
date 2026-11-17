@@ -95,6 +95,17 @@ Each tenant adds its own rule to the prompt (Tallowmere: never say approve or de
 
 What broke: the fake model's passage parser stopped at the first `>` inside the `source="MP-150 > Initial 90-day rental"` attribute and found no passages, so every answer became a refusal. One test caught it.
 
+### Step 7: the agent runtime
+I wrote the loop myself rather than use an SDK runner, because the loop is where the safety rules live:
+- Tools are typed (Pydantic input models) and declare a side effect: `none`, `proposes` or `acts`. Only the tenant's allowlisted tools are offered, and `acts` tools never are.
+- Calling a `proposes` tool creates an approval request and tells the model, in those words, that nothing ran. Approvals are tied to a hash of the exact request, expire (15 minutes for Corvane), need the tenant's approver role, and can't be seen or decided from another tenant. Approving runs the paired `acts` tool once, and every decision is audited.
+- Bad arguments, failing tools and unknown tools go back to the model as error results. All results for one turn go back in one message, so the model keeps making parallel calls.
+- Steps, spend and wall-clock time are capped, and the run says which limit stopped it.
+- Every tool output is wrapped as data and passes through a filter before the model sees it; prompt-injection detection plugs in there in Step 12.
+- Session memory carries earlier conclusions into the next question.
+
+What broke: the fake model recorded a live reference to the message list, and the loop kept appending to it, so a test inspecting "what the model saw" saw the future. The fake now snapshots every request.
+
 ## Licence
 
 MIT
