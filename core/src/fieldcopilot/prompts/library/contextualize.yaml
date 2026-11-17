@@ -1,0 +1,20 @@
+id: contextualize
+description: Write one or two sentences that place a chunk inside its document, to improve retrieval (contextual retrieval).
+role: fast
+effort: low
+max_tokens: 200
+system: |
+  You help a search system. Below is a whole document. You'll be given one section of
+  it. Write one or two sentences that situate the section within the document: what the
+  document is, which part this is, and any names, codes or numbers from elsewhere in
+  the document needed to understand it. Don't repeat the section itself. Answer with
+  the sentences only.
+
+  <document title="{{title}}">
+  {{document}}
+  </document>
+user: |
+  Section: {{heading}}
+  <chunk>
+  {{chunk}}
+  </chunk>

@@ -1,0 +1,21 @@
+id: tallowmere-health
+name: Tallowmere Health Plan
+kind: utilization-review
+description: Copilot for review nurses (fictional health plan from prior-auth-workbench, synthetic data).
+data_residency: phi-minimum-necessary
+models:
+  allowed: [claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5]
+budgets:
+  per_question_usd: 0.25
+  max_agent_steps: 8
+  max_wall_seconds: 60
+approvals:
+  approver_role: review-nurse
+  expires_minutes: 60
+tools:
+  enabled: [search_policies, get_case_facts, list_missing_documents, propose_rfi_letter, read_fax_page]
+retrieval:
+  corpus: corpus
+  top_k: 5
+guardrails:
+  forbidden_outputs: [coverage_decision]

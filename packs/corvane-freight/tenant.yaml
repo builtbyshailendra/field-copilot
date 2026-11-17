@@ -1,0 +1,20 @@
+id: corvane-freight
+name: Corvane Freight
+kind: sre
+description: On-call copilot for Corvane's platform team (fictional company, synthetic data).
+data_residency: customer-aws-account   # the private deployment pattern applies
+models:
+  allowed: [claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5]
+budgets:
+  per_investigation_usd: 0.50
+  max_agent_steps: 10
+  max_wall_seconds: 120
+approvals:
+  approver_role: oncall-lead
+  expires_minutes: 15
+tools:
+  enabled: [search_runbooks, get_pods, get_events, get_logs, query_metrics, get_deploy_history,
+            propose_rollback, propose_scale, propose_restart]
+retrieval:
+  corpus: corpus
+  top_k: 6

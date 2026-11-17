@@ -56,6 +56,13 @@ The prompt lab (`python -m fieldcopilot.prompts.lab route`) runs every version o
 
 On the fake model both versions score 94%, because the fake is a keyword rule that doesn't read prompts. That run proves the harness, not the prompt. It did show one real thing: the version with examples costs about 40% more input tokens per call, which the real comparison has to justify.
 
+### Step 4: the customers' documents, chunking and contextual retrieval
+Each pack now has its documents. Corvane: 11 runbooks, an on-call handbook and 5 postmortems, written to be consistent with each other (the March shipment-api postmortem is why the crash-loop runbook says "read the previous container's logs first"). Tallowmere: 6 synthetic medical policies and 2 operating procedures (RFI letters, CMS-0057-F deadlines), labelled as fictional and not clinical guidance.
+
+The chunker never crosses a heading, keeps each chunk's heading path, splits long sections at paragraph boundaries, and records exact character offsets, which is what lets a citation be checked against the source later. A test checks `doc.text[start:end] == chunk.text` for every chunk.
+
+Contextual retrieval prepends one or two model-written sentences to each chunk before indexing. The whole document sits in the cached system prompt, so only the first chunk of a document pays for it; results are cached on disk by prompt version and content, so re-indexing an unchanged corpus costs nothing. If the model is down, chunks are indexed without context rather than failing the ingest.
+
 ## Licence
 
 MIT
