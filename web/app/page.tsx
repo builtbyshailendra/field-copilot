@@ -71,7 +71,11 @@ export default function AskPage() {
             <div className="row">
               <span className="chip">{answer.specialist.replace("_", " ")}</span>
               {answer.violations.map((v) => <span key={v} className="chip bad">blocked: {v}</span>)}
-              {answer.flags.length > 0 && <span className="chip warn">injection flagged in tool output</span>}
+              {answer.flags.some((f) => f.includes("possible_injection")) &&
+                <span className="chip warn">injection flagged in tool output</span>}
+              {answer.flags.some((f) => f.includes("secret_redacted")) &&
+                <span className="chip warn">secrets removed from tool output</span>}
+              {answer.flags.includes("cache:hit") && <span className="chip">reused a verified answer</span>}
               <span className="muted">${answer.cost_usd.toFixed(4)} · <Link href={`/runs/${answer.run_id}`}>trace</Link></span>
             </div>
             <p>{answer.text}</p>
