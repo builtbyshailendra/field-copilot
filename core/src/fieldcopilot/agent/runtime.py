@@ -104,6 +104,21 @@ class Agent:
             self.on_step(step)
 
     def run(self, task: str, session: str | None = None, extras: dict[str, Any] | None = None) -> AgentRun:
+        from fieldcopilot.obs.tracing import tracer
+
+        with tracer.start_as_current_span(f"invoke_agent {self.purpose}") as span:
+            span.set_attribute("gen_ai.operation.name", "invoke_agent")
+            span.set_attribute("gen_ai.agent.name", self.purpose)
+            span.set_attribute("fieldcopilot.tenant", self.tenant)
+            run = self._run(task, session, extras)
+            span.set_attribute("fieldcopilot.run_id", run.run_id)
+            span.set_attribute("fieldcopilot.status", run.status)
+            span.set_attribute("fieldcopilot.steps", len(run.steps))
+            span.set_attribute("fieldcopilot.cost_usd", run.cost_usd)
+            span.set_attribute("fieldcopilot.approvals", len(run.approvals))
+            return run
+
+    def _run(self, task: str, session: str | None = None, extras: dict[str, Any] | None = None) -> AgentRun:
         run = AgentRun(run_id=f"run-{uuid.uuid4().hex[:10]}", tenant=self.tenant, task=task)
         ctx = ToolContext(self.tenant, run.run_id, extras=extras or {})
         tools = self.registry.offered(self.allowlist)
@@ -161,6 +176,19 @@ class Agent:
 
     def _call(self, run: AgentRun, ctx: ToolContext, by_name: dict[str, Tool], call_id: str, name: str,
               args: dict[str, Any]) -> dict[str, Any]:
+        from fieldcopilot.obs.tracing import tracer
+
+        with tracer.start_as_current_span(f"execute_tool {name}") as span:
+            span.set_attribute("gen_ai.operation.name", "execute_tool")
+            span.set_attribute("gen_ai.tool.name", name)
+            span.set_attribute("gen_ai.tool.call.id", call_id)
+            result = self._call_inner(run, ctx, by_name, call_id, name, args)
+            span.set_attribute("fieldcopilot.tool.error", bool(result.get("is_error")))
+            span.set_attribute("fieldcopilot.tool.side_effect", by_name[name].side_effect if name in by_name else "unknown")
+            return result
+
+    def _call_inner(self, run: AgentRun, ctx: ToolContext, by_name: dict[str, Tool], call_id: str, name: str,
+                    args: dict[str, Any]) -> dict[str, Any]:
         started = time.perf_counter()
         tool = by_name.get(name)
         if tool is None:

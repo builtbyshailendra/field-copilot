@@ -105,10 +105,31 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
     """`llm_factory()` and `copilot_factory(tenant, llm, approvals)` are injectable for tests."""
     settings = settings or Settings()
     from fieldcopilot.api.assembly import build_copilot, default_llm
+    from fieldcopilot.obs import metrics as obs_metrics
+    from fieldcopilot.obs import tracing
 
-    llm_factory = llm_factory or default_llm
+    tracing.setup("field-copilot-api")
+    base_llm_factory = llm_factory or default_llm
+
+    def llm_factory() -> LLM:
+        llm = base_llm_factory()
+        llm.hooks.append(obs_metrics.llm_hook)
+        return llm
+
     copilot_factory = copilot_factory or build_copilot
     app = FastAPI(title="field-copilot", version="0.1.0")
+
+    @app.middleware("http")
+    async def count_requests(request: Request, call_next):
+        try:
+            response = await call_next(request)
+        except Exception:
+            obs_metrics.HTTP_REQUESTS.labels(request.method, "500").inc()
+            raise
+        obs_metrics.HTTP_REQUESTS.labels(request.method, str(response.status_code)).inc()
+        return response
+    if os.environ.get("FIELD_SELFCHECK", "1") == "1":
+        threading.Thread(target=_safe_selfcheck, daemon=True).start()
     cfg = auth.AuthConfig(settings.jwt_secret)
     users = auth.UserDirectory(settings.demo_password)
     db = Database(settings.app_dsn)
@@ -139,6 +160,21 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
     @app.get("/healthz")
     def healthz() -> dict:
         return {"status": "ok"}
+
+    @app.get("/metrics")
+    def prometheus_metrics() -> Response:
+        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+        for pack_id in ("corvane-freight", "tallowmere-health"):
+            try:
+                obs_metrics.PENDING_APPROVALS.labels(pack_id).set(len(approvals_for(pack_id).pending(pack_id)))
+            except Exception:  # noqa: BLE001 - metrics must not fail because the DB is down
+                pass
+        return Response(generate_latest(obs_metrics.REGISTRY), media_type=CONTENT_TYPE_LATEST)
+
+    @app.get("/v1/selfcheck")
+    def selfcheck() -> dict:
+        return getattr(app.state, "selfcheck", {"status": "running"})
 
     @app.get("/readyz")
     def readyz():
@@ -205,6 +241,7 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
                           [to_jsonable(p) for p in reply.payload],
                           "trace": reply.trace, "cost_usd": reply.cost_usd, "idempotency_key": (idempotency_key or None)}
                 runs.save(user.tenant, record)
+                obs_metrics.record_reply(user.tenant, reply)
                 events.put(("answer", {"run_id": run_id, "route": reply.route, "specialist": reply.specialist,
                                        "text": reply.text, "result": record["result"], "approvals": reply.approvals,
                                        "violations": reply.violations, "flags": reply.flags, "cost_usd": reply.cost_usd}))
@@ -257,6 +294,7 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
             status = 404 if "no approval" in str(error) else 403 if "lacks" in str(error) or "tenant" in str(error) else 409
             raise HTTPException(status, str(error)) from None
         del copilot
+        obs_metrics.APPROVALS.labels(user.tenant, approval.status).inc()
         return _approval_view(approval)
 
     @app.post("/v1/approvals/{approval_id}/approve")
@@ -316,7 +354,25 @@ def create_app(settings: Settings | None = None, llm_factory=None, copilot_facto
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
     app.state.runs, app.state.jobs, app.state.db = runs, jobs, db
+    _APPS.append(app)
     return app
+
+
+_APPS: list = []
+
+
+def _safe_selfcheck() -> None:
+    from fieldcopilot.selfcheck import publish
+
+    try:
+        result = publish()
+    except Exception as error:  # noqa: BLE001 - a failed self-check scores zero, never crashes the pod
+        from fieldcopilot.obs.metrics import CANARY_QUALITY
+
+        CANARY_QUALITY.set(0.0)
+        result = {"score": 0.0, "error": f"{type(error).__name__}: {error}"}
+    for app in _APPS:
+        app.state.selfcheck = result
 
 
 def _budget():

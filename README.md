@@ -234,6 +234,15 @@ Measured on a synthetic note (made with Windows text-to-speech, 13.3 s): transcr
 
 What broke: faster-whisper's own audio decoder calls PyAV with an argument newer PyAV releases removed. I decode the WAV with the standard library instead and pass the samples to the model, which also drops a dependency.
 
+### Step 19: observability
+- **Traces (OpenTelemetry, GenAI semantic conventions):** `invoke_agent` spans contain the agent's `chat` spans (model, tokens, finish reason, cost, attempts, fallback) and `execute_tool` spans (tool name, call ID, side effect, error). Prompts and outputs are never put on spans, because they can carry PHI; the collector config also strips the content attributes in case a library adds them. Off by default (no-op), on with `FIELD_OTLP_ENDPOINT`.
+- **Metrics (Prometheus, `/metrics`):** model calls by purpose, model and outcome; latency histogram; tokens; spend per tenant; fallbacks; replies by outcome (answered, not in documents, unverified, refused); approvals; approvals waiting; injection flags; output-policy blocks; HTTP requests by code; and a **golden-set quality score** for the running build. Labels never include users, questions or run IDs.
+- **Logs:** JSON with trace and span IDs, redacted before writing.
+- **SLOs and alerts** (`deploy/observability/prometheus-rules.yaml`): 99.5% availability with multi-window burn-rate alerts (page at 14.4×, ticket at 6×), model reliability, plus alerts for injection attempts, policy blocks, a spend spike per tenant, approvals waiting 30 minutes, and a low quality score.
+- **Grafana dashboard** (`deploy/observability/grafana-dashboard.json`) for all of the above, filterable by tenant.
+
+The **startup self-check** runs in every pod in a few seconds without a model: router accuracy, retrieval MRR per tenant, and the output-policy cases. A healthy build scores 0.83; a deliberately broken build (`FIELD_FAULT=empty_retrieval`) scores 0.48. Step 20's canary gates on that number.
+
 ## Licence
 
 MIT

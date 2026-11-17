@@ -147,6 +147,14 @@ def test_feedback_and_jobs(client, dsns):
     assert job["status"] == "done" and job["result"]["chunks"] > 20
 
 
+def test_metrics_endpoint_exposes_request_and_model_metrics(client):
+    headers = login(client, "asha")
+    client.post("/v1/ask", json={"message": "what counts as a SEV1?"}, headers=headers)
+    text = client.get("/metrics").text
+    assert 'fieldcopilot_http_requests_total{code="200",method="POST"}' in text
+    assert "fieldcopilot_pending_approvals" in text and "fieldcopilot_canary_quality_score" in text
+
+
 def test_rate_limit(dsns):
     from fastapi.testclient import TestClient
 

@@ -22,11 +22,20 @@ from fieldcopilot.rag.retriever import Retriever
 from fieldcopilot.rag.stores import MemoryIndex
 
 
+class _EmptyRetriever(Retriever):
+    """FIELD_FAULT=empty_retrieval: a deliberately broken build for the canary drill."""
+
+    def search(self, query: str, k: int = 5):
+        return []
+
+
 @lru_cache(maxsize=None)
 def retriever_for(tenant: str) -> Retriever:
     pack = load_pack(tenant)
     index = MemoryIndex(build_embedder(), tenant)
     index.add(chunk_corpus(load_corpus(pack.corpus_dir, tenant)))
+    if os.environ.get("FIELD_FAULT") == "empty_retrieval":
+        return _EmptyRetriever(index, "hybrid")
     return Retriever(index, "hybrid")
 
 

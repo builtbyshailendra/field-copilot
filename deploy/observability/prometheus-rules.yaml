@@ -1,0 +1,79 @@
+# SLOs and alerts for field-copilot (PrometheusRule for the Prometheus Operator).
+#
+# SLO 1, availability: 99.5% of API requests succeed (non-5xx) over 30 days.
+#   Error budget = 0.5%. Multi-window burn-rate alerts (Google SRE workbook):
+#   page when the budget would be gone in ~2 days (14.4x over 1h AND 5m),
+#   ticket when in ~5 days (6x over 6h AND 30m).
+# SLO 2, model reliability: 99% of model calls succeed after retries and fallback.
+# Guardrail and spend alerts are not SLOs; they page a person because something
+# unusual is happening (injection attempts, a cost spike, approvals nobody handles).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: field-copilot
+  labels: {app: field-copilot}
+spec:
+  groups:
+    - name: field-copilot-slo-recording
+      rules:
+        - record: fieldcopilot:http_errors:ratio_rate5m
+          expr: sum(rate(fieldcopilot_http_requests_total{code=~"5.."}[5m])) / sum(rate(fieldcopilot_http_requests_total[5m]))
+        - record: fieldcopilot:http_errors:ratio_rate30m
+          expr: sum(rate(fieldcopilot_http_requests_total{code=~"5.."}[30m])) / sum(rate(fieldcopilot_http_requests_total[30m]))
+        - record: fieldcopilot:http_errors:ratio_rate1h
+          expr: sum(rate(fieldcopilot_http_requests_total{code=~"5.."}[1h])) / sum(rate(fieldcopilot_http_requests_total[1h]))
+        - record: fieldcopilot:http_errors:ratio_rate6h
+          expr: sum(rate(fieldcopilot_http_requests_total{code=~"5.."}[6h])) / sum(rate(fieldcopilot_http_requests_total[6h]))
+        - record: fieldcopilot:llm_errors:ratio_rate1h
+          expr: sum(rate(fieldcopilot_llm_calls_total{outcome="error"}[1h])) / sum(rate(fieldcopilot_llm_calls_total[1h]))
+    - name: field-copilot-slo-alerts
+      rules:
+        - alert: CopilotAvailabilityFastBurn
+          expr: fieldcopilot:http_errors:ratio_rate1h > (14.4 * 0.005) and fieldcopilot:http_errors:ratio_rate5m > (14.4 * 0.005)
+          for: 2m
+          labels: {severity: page}
+          annotations:
+            summary: "field-copilot is burning its 30-day error budget fast (gone in ~2 days)"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#api-errors"
+        - alert: CopilotAvailabilitySlowBurn
+          expr: fieldcopilot:http_errors:ratio_rate6h > (6 * 0.005) and fieldcopilot:http_errors:ratio_rate30m > (6 * 0.005)
+          for: 15m
+          labels: {severity: ticket}
+          annotations:
+            summary: "field-copilot error budget burning steadily (gone in ~5 days)"
+        - alert: CopilotModelErrors
+          expr: fieldcopilot:llm_errors:ratio_rate1h > 0.01
+          for: 10m
+          labels: {severity: page}
+          annotations:
+            summary: "More than 1% of model calls fail after retries and fallback"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#model-provider-outage"
+    - name: field-copilot-guardrails-and-spend
+      rules:
+        - alert: CopilotInjectionAttempts
+          expr: sum by (tenant) (increase(fieldcopilot_injection_flags_total[15m])) >= 3
+          labels: {severity: ticket}
+          annotations:
+            summary: "{{ $labels.tenant }}: several tool outputs looked like instructions in 15 minutes"
+        - alert: CopilotPolicyBlocks
+          expr: sum by (tenant, rule) (increase(fieldcopilot_policy_violations_total[1h])) >= 5
+          labels: {severity: ticket}
+          annotations:
+            summary: "{{ $labels.tenant }}: replies blocked by output policy ({{ $labels.rule }}) - check the prompt version"
+        - alert: CopilotSpendSpike
+          expr: sum by (tenant) (increase(fieldcopilot_llm_cost_usd_total[1h])) > 5
+          labels: {severity: page}
+          annotations:
+            summary: "{{ $labels.tenant }}: model spend above $5 in the last hour"
+        - alert: CopilotApprovalsWaiting
+          expr: max by (tenant) (fieldcopilot_pending_approvals) > 0
+          for: 30m
+          labels: {severity: ticket}
+          annotations:
+            summary: "{{ $labels.tenant }}: approvals have waited 30 minutes; nobody with the approver role has looked"
+        - alert: CopilotCanaryQualityLow
+          expr: min(fieldcopilot_canary_quality_score) < 0.75
+          for: 5m
+          labels: {severity: page}
+          annotations:
+            summary: "A running build scores below 0.75 on the golden-set self-check"

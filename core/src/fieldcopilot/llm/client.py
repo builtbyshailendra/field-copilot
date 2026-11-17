@@ -85,6 +85,30 @@ class LLM:
 
     # ---- plain calls ----------------------------------------------------------
     def complete(self, request: LLMRequest, budget: Budget | None = None) -> LLMResponse:
+        from fieldcopilot.obs.tracing import tracer
+
+        requested = self.models[request.role][0]
+        with tracer.start_as_current_span(f"chat {requested}") as span:
+            span.set_attribute("gen_ai.operation.name", "chat")
+            span.set_attribute("gen_ai.provider.name", getattr(self.provider, "name", "unknown"))
+            span.set_attribute("gen_ai.request.model", requested)
+            span.set_attribute("fieldcopilot.purpose", request.purpose)
+            span.set_attribute("fieldcopilot.tenant", request.tenant or "none")
+            try:
+                response = self._complete(request, budget)
+            except Exception as error:
+                span.set_attribute("error.type", type(error).__name__)
+                raise
+            span.set_attribute("gen_ai.response.model", response.model)
+            span.set_attribute("gen_ai.usage.input_tokens", response.usage.input_tokens)
+            span.set_attribute("gen_ai.usage.output_tokens", response.usage.output_tokens)
+            span.set_attribute("gen_ai.response.finish_reasons", [response.stop_reason])
+            span.set_attribute("fieldcopilot.cost_usd", response.cost_usd)
+            span.set_attribute("fieldcopilot.attempts", response.attempts)
+            span.set_attribute("fieldcopilot.fell_back", response.fell_back)
+            return response
+
+    def _complete(self, request: LLMRequest, budget: Budget | None = None) -> LLMResponse:
         if budget:
             budget.check()
         chain = self.models[request.role]
