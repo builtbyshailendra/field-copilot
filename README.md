@@ -177,6 +177,22 @@ Two findings worth keeping visible:
 
 **Feedback loop:** every thumbs-up or thumbs-down is stored (redacted). A thumbs-down becomes a candidate test case, deduplicated by question. A person writes the expected answer and promotes it into the pack's `qa_from_feedback.yaml`, which the Q&A evaluation then includes. Production mistakes become regression tests, with a person deciding what "right" means.
 
+### Step 14: a classical ML router in front of the LLM
+Most messages are easy to route. A scikit-learn classifier (TF-IDF on words and characters, logistic regression) trained on 294 template-generated messages decides first; if it's at least 80% confident, the LLM routing call is skipped.
+
+On the 37 hand-written routing questions, which it never trained on:
+
+| Metric | Value |
+|---|---|
+| Accuracy | 91.9% |
+| Confident (≥ 0.8) | 59.5% of messages |
+| Accuracy when confident | **100%** |
+| Latency / cost | ~2 ms / $0 |
+
+So about 60% of messages skip an LLM call with no routing errors, and the three it got wrong were all below the threshold, so they would have gone to the LLM anyway. Model card: `docs/model-card-router.md`.
+
+What broke: a leakage test failed on the first run. One training template ("what does exit code 137 mean") was word-for-word a test question. Reworded; the numbers above are after the fix.
+
 ## Licence
 
 MIT
