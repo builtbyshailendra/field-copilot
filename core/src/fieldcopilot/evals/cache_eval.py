@@ -77,15 +77,14 @@ def main() -> None:
     lines = ["# Semantic cache safety (fake model)", ""]
     for kind in args.embedders.split(","):
         result = measure(kind)
-        (OUT / f"{kind}.json").write_text(json.dumps(result, indent=2), encoding="utf-8", newline="
-")
+        (OUT / f"{kind}.json").write_text(json.dumps(result, indent=2), encoding="utf-8", newline="\n")
         lines += [f"## {kind} ({result['scored']} pairs scored, {result['skipped']} skipped: base not answered)", "",
                   "| threshold | guards | paraphrases reused | wrong answers served |", "|---|---|---|---|"]
         for s in result["sweep"]:
             lines.append(f"| {s['threshold']:.2f} | {s['guards']} | "
                          f"{s['paraphrase_hit_rate']:.0%} | {s['wrong_hits']} of {s['near_misses']} |")
         lines.append("")
-    (OUT / "summary.md").write_text("\n".join(lines), encoding="utf-8")
+    (OUT / "summary.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     print("\n".join(lines))
 
 
