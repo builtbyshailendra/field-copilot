@@ -1,0 +1,13 @@
+# Evaluation suite (fake model, hashing-512 embeddings, 2026-11-17T17:57:41+00:00)
+
+- **routing**: accuracy=0.9189, tricky=0.8
+- **retrieval.corvane-freight**: mrr=0.689, recall_at_5=0.806, hit_at_1=0.542
+- **qa.corvane-freight**: correct=0.7, refusal_correct=0.5, false_answers=1, errors=0
+- **retrieval.tallowmere-health**: mrr=0.707, recall_at_5=0.875, hit_at_1=0.583
+- **qa.tallowmere-health**: correct=0.7, refusal_correct=1.0, false_answers=0, errors=0
+- **investigations**: scenarios=13, top1=1.0, top3=1.0, evidence_verified=1.0, key_evidence_found=1.0, action_correct=1.0, unapproved_actions=0, mean_steps=13.2, cost_usd=0.2907
+- **case_reviews**: cases=5, missing_docs_correct=1.0, letter_decision_correct=1.0
+- **redteam**: passed=19, total=19
+- **judge**: accuracy=0.75, kappa=0.5, disagreements=['j10', 'j14', 'j16', 'j17', 'j20']
+
+Gates: all passed

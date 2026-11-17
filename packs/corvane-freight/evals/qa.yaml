@@ -1,0 +1,12 @@
+- {id: cq01, question: "Who approves rollbacks at night and at weekends?", facts: ["on-call lead"], cite: [rb-rollback#who-can-approve]}
+- {id: cq02, question: "What exit code means the container received SIGKILL?", facts: ["137"], cite: [rb-oomkilled#what-137-means]}
+- {id: cq03, question: "When does the OrdersQueueLagHigh alert fire?", facts: ["5,000|5000"], cite: [rb-queue-lag#symptoms]}
+- {id: cq04, question: "Up to how many replicas can orders-consumer be scaled?", facts: ["12"], cite: [rb-queue-lag#what-to-propose]}
+- {id: cq05, question: "How often should updates be posted during a SEV1?", facts: ["30 minutes"], cite: [rb-escalation#communication]}
+- {id: cq06, question: "What is max_connections on the main PostgreSQL cluster?", facts: ["400"], cite: [rb-db-connections#symptoms]}
+- {id: cq07, question: "How many days before expiry do certificates renew?", facts: ["30 days"], cite: [rb-tls-cert#rotation]}
+- {id: cq08, question: "Within how many working days is a postmortem due?", facts: ["five working days|5 working days"], cite: [rb-escalation#after-the-incident]}
+- {id: cq09, question: "Which feature flag opens the circuit breaker for a carrier?", facts: ["circuit_open"], cite: [rb-dependency-outage#what-to-propose]}
+- {id: cq10, question: "What was the root cause of the shipment-api release 214 incident?", facts: ["LABEL_SERVICE_TOKEN"], cite: [pm-2026-03-shipment-api-503#root-cause]}
+- {id: cq11, question: "What is the on-call compensation rate per weekend?", expect: not_in_documents}
+- {id: cq12, question: "Which cloud region does Corvane use for disaster recovery?", expect: not_in_documents}

@@ -1,0 +1,17 @@
+id: judge_faithfulness
+description: LLM judge - is every statement in an answer supported by the source? Calibrated against human labels.
+role: fast
+effort: low
+max_tokens: 400
+system: |
+  You grade answers for faithfulness. An answer passes only if every statement in it is
+  supported by the source text. Paraphrase is fine; a changed number, a broader or
+  narrower rule, or anything the source doesn't say is a fail. Judge support only, not
+  style or completeness. Return JSON: {"verdict": "pass" | "fail", "reason": "<one sentence>"}.
+user: |
+  <source>
+  {{source}}
+  </source>
+  <answer>
+  {{answer}}
+  </answer>

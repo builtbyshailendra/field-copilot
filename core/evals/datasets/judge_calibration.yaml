@@ -1,0 +1,22 @@
+# Human-labelled answers for calibrating the faithfulness judge. Labelled by hand:
+# pass = every statement in the answer is supported by the source text.
+- {id: j01, source: "An MRI of the knee is considered medically necessary when the member has had plain X-rays of the knee within the last 60 days.", answer: "A knee MRI needs X-rays from the last 60 days.", label: pass}
+- {id: j02, source: "An MRI of the knee is considered medically necessary when the member has had plain X-rays of the knee within the last 60 days.", answer: "A knee MRI needs X-rays from the last 90 days.", label: fail}
+- {id: j03, source: "The first 12 visits per condition per calendar year do not need prior authorization.", answer: "The first 12 PT visits each year need no prior authorization.", label: pass}
+- {id: j04, source: "The first 12 visits per condition per calendar year do not need prior authorization.", answer: "PT never needs prior authorization.", label: fail}
+- {id: j05, source: "Coverage continues when the device's download shows use of 4 hours or more per night on at least 70% of nights.", answer: "Members must use CPAP 4+ hours on 70% of nights.", label: pass}
+- {id: j06, source: "Coverage continues when the device's download shows use of 4 hours or more per night on at least 70% of nights.", answer: "Members must use CPAP every single night.", label: fail}
+- {id: j07, source: "Only a medical director can deny a request for medical necessity.", answer: "Medical directors are the only ones who can deny for medical necessity.", label: pass}
+- {id: j08, source: "Only a medical director can deny a request for medical necessity.", answer: "Nurses can deny requests that lack documents.", label: fail}
+- {id: j09, source: "Exit code 137 is 128 + 9: the container received SIGKILL. It is not always out of memory.", answer: "137 means SIGKILL, which isn't always an OOM.", label: pass}
+- {id: j10, source: "Exit code 137 is 128 + 9: the container received SIGKILL. It is not always out of memory.", answer: "137 always means the container ran out of memory.", label: fail}
+- {id: j11, source: "At night and at weekends the on-call lead approves rollbacks.", answer: "The on-call lead approves rollbacks at night.", label: pass}
+- {id: j12, source: "At night and at weekends the on-call lead approves rollbacks.", answer: "Any engineer can approve a rollback at night.", label: fail}
+- {id: j13, source: "Scale orders-consumer up to the partition count (12), no further.", answer: "Don't scale orders-consumer past 12 replicas.", label: pass}
+- {id: j14, source: "Scale orders-consumer up to the partition count (12), no further.", answer: "Scale orders-consumer as high as needed to clear the lag.", label: fail}
+- {id: j15, source: "Certificates renew 30 days before expiry. An alert fires at 14 days left.", answer: "Certificates renew 30 days early and alert at 14 days.", label: pass}
+- {id: j16, source: "Certificates renew 30 days before expiry. An alert fires at 14 days left.", answer: "Certificates renew 14 days before expiry.", label: fail}
+- {id: j17, source: "Ask for everything missing in one letter.", answer: "Put every missing item in a single RFI letter.", label: pass}
+- {id: j18, source: "Ask for everything missing in one letter.", answer: "Send one letter per missing document so nothing is missed.", label: fail}
+- {id: j19, source: "A decision within 72 hours of receipt for expedited requests.", answer: "Expedited requests need a decision within three days of receipt.", label: pass}
+- {id: j20, source: "A decision within 72 hours of receipt for expedited requests.", answer: "Expedited requests are decided within a week.", label: fail}

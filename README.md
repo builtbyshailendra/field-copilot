@@ -158,6 +158,25 @@ Three guardrails, each with a clear job:
 
 Red-team suite (`python -m fieldcopilot.guard.redteam`): 6 attempts to get a decision, an unapproved action or a secret by asking; 3 instructions planted in a log line, a Kubernetes event and a poisoned runbook; 10 candidate answers, 6 bad and 4 good, to measure false positives too. All 19 pass. The injection and output layers don't depend on the model. The "ask" layer here is the keyword router; a real model faces the same 6 cases when a key exists.
 
+### Step 13: one evaluation suite, quality gates, a calibrated judge, and a feedback loop
+`python -m fieldcopilot.evals.suite --gate` runs everything: routing, retrieval, grounded Q&A (12 questions per customer, including ones the documents can't answer), the 13 investigations, the 5 case reviews, the red-team suite and the judge calibration. CI runs it on every push and fails the build if any metric drops below its gate (`core/evals/gates.yaml`).
+
+Fake model + hashing embeddings (the CI configuration):
+
+| Area | Result |
+|---|---|
+| Routing (keyword rules) | 92% (tricky 80%) |
+| Retrieval, hybrid, hashing embeddings | MRR 0.69 Corvane, 0.71 Tallowmere |
+| Grounded Q&A (extractive fake) | 70% correct both; Corvane answered 1 question it should have refused |
+| Investigations / case reviews / red team | 13/13, 5/5, 19/19 |
+| Heuristic judge vs my hand labels | accuracy 75%, **kappa 0.50** |
+
+Two findings worth keeping visible:
+- The fake answerer "answered" *what is the on-call compensation per weekend?* from a rollback runbook sentence that shares the words "on-call" and "weekends". The gate allows exactly that one known miss for the fake. A real model's gate is zero false answers.
+- An LLM judge is only as good as its agreement with people. I labelled 20 answers by hand (half subtly wrong: a changed number, "never" for "rarely", "one letter per item" for "one letter"). A word-overlap judge reaches kappa 0.50, because it misses meaning changes like "not always" becoming "always". That's why the Claude judge must reach kappa 0.8 on this set before its verdicts gate anything.
+
+**Feedback loop:** every thumbs-up or thumbs-down is stored (redacted). A thumbs-down becomes a candidate test case, deduplicated by question. A person writes the expected answer and promotes it into the pack's `qa_from_feedback.yaml`, which the Q&A evaluation then includes. Production mistakes become regression tests, with a person deciding what "right" means.
+
 ## Licence
 
 MIT

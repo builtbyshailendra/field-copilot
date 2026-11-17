@@ -1,0 +1,15 @@
+# Grounded-answer questions. `facts`: strings a correct answer must state (any one per
+# group, groups separated by |). `cite`: chunks a correct answer may cite.
+# `expect: not_in_documents` means the right answer is that the documents don't say.
+- {id: tq01, question: "How long must radiating back pain last before a lumbar MRI meets criterion B?", facts: ["6 weeks"], cite: [mp-114-lumbar-mri#b-persistent-radiculopathy]}
+- {id: tq02, question: "How many PT visits per condition per year don't need prior authorization?", facts: ["12"], cite: [mp-142-physical-therapy#initial-visits]}
+- {id: tq03, question: "What AHI qualifies for the initial 90-day CPAP rental?", facts: ["15"], cite: [mp-150-cpap#initial-90-day-rental]}
+- {id: tq04, question: "How many hours of CPAP use per night are needed for continued coverage?", facts: ["4 hours"], cite: [mp-150-cpap#continued-coverage-after-90-days]}
+- {id: tq05, question: "What Epworth score is needed for a sleep study?", facts: ["10"], cite: [mp-121-sleep-study#clinical-criteria-for-any-sleep-study]}
+- {id: tq06, question: "What BMI qualifies for bariatric surgery without other conditions?", facts: ["40"], cite: [mp-130-bariatric#criteria]}
+- {id: tq07, question: "How long must a supervised weight-management program last before bariatric surgery?", facts: ["3 consecutive months|3 months"], cite: [mp-130-bariatric#criteria]}
+- {id: tq08, question: "How recent must a knee X-ray be before a knee MRI?", facts: ["60 days"], cite: [mp-118-knee-mri#criteria]}
+- {id: tq09, question: "What is the decision deadline for an expedited request?", facts: ["72 hours"], cite: [um-ops-02-timeframes#deadlines-from-cms-0057-f-as-applied-by-tallowme]}
+- {id: tq10, question: "What response deadline does an RFI give for a standard request?", facts: ["14 calendar days|14"], cite: [um-ops-01-rfi-letters#what-every-rfi-must-contain]}
+- {id: tq11, question: "Does the plan cover dental implants?", expect: not_in_documents}
+- {id: tq12, question: "What is the copay for a specialist visit?", expect: not_in_documents}

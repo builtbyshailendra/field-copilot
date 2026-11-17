@@ -26,6 +26,14 @@ jobs:
       - name: Test
         working-directory: core
         run: python -m pytest
+      - name: Evaluation suite with quality gates
+        working-directory: core
+        run: python -m fieldcopilot.evals.suite --gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-suite
+          path: core/evals/results/suite/
 
   pgvector:
     name: vector store on PostgreSQL + pgvector
