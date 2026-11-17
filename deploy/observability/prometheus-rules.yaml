@@ -41,6 +41,7 @@ spec:
           labels: {severity: ticket}
           annotations:
             summary: "field-copilot error budget burning steadily (gone in ~5 days)"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#api-errors"
         - alert: CopilotModelErrors
           expr: fieldcopilot:llm_errors:ratio_rate1h > 0.01
           for: 10m
@@ -55,25 +56,30 @@ spec:
           labels: {severity: ticket}
           annotations:
             summary: "{{ $labels.tenant }}: several tool outputs looked like instructions in 15 minutes"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#injection-attempts"
         - alert: CopilotPolicyBlocks
           expr: sum by (tenant, rule) (increase(fieldcopilot_policy_violations_total[1h])) >= 5
           labels: {severity: ticket}
           annotations:
             summary: "{{ $labels.tenant }}: replies blocked by output policy ({{ $labels.rule }}) - check the prompt version"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#policy-blocks"
         - alert: CopilotSpendSpike
           expr: sum by (tenant) (increase(fieldcopilot_llm_cost_usd_total[1h])) > 5
           labels: {severity: page}
           annotations:
             summary: "{{ $labels.tenant }}: model spend above $5 in the last hour"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#spend-spike"
         - alert: CopilotApprovalsWaiting
           expr: max by (tenant) (fieldcopilot_pending_approvals) > 0
           for: 30m
           labels: {severity: ticket}
           annotations:
             summary: "{{ $labels.tenant }}: approvals have waited 30 minutes; nobody with the approver role has looked"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#approvals-waiting"
         - alert: CopilotCanaryQualityLow
           expr: min(fieldcopilot_canary_quality_score) < 0.75
           for: 5m
           labels: {severity: page}
           annotations:
             summary: "A running build scores below 0.75 on the golden-set self-check"
+            runbook_url: "https://github.com/builtbyshailendra/field-copilot/blob/main/docs/operations/runbook.md#canary-quality-low"
