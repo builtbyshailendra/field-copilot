@@ -1,6 +1,6 @@
 # API and worker image. The repo layout is kept (core/, packs/) and the package installed
 # in editable mode, so pack and dataset paths resolve the same way as in development.
-FROM python:3.12-slim AS build
+FROM python:3.15-slim AS build
 WORKDIR /app
 RUN python -m venv /venv
 COPY core/pyproject.toml core/pyproject.toml
@@ -12,7 +12,7 @@ ARG KUBECTL_VERSION=v1.34.2
 ARG TARGETARCH=amd64
 RUN python -c "import hashlib, urllib.request as u; b = 'https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl'; data = u.urlopen(b).read(); want = u.urlopen(b + '.sha256').read().decode().split()[0]; assert hashlib.sha256(data).hexdigest() == want, 'kubectl checksum mismatch'; open('/kubectl', 'wb').write(data)" && chmod 755 /kubectl
 
-FROM python:3.12-slim
+FROM python:3.15-slim
 RUN useradd --system --uid 10001 app
 WORKDIR /app
 COPY --from=build /venv /venv
