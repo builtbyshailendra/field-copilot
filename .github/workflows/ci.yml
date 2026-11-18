@@ -83,7 +83,7 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: core/pyproject.toml
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
