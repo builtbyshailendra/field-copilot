@@ -167,3 +167,38 @@ def test_rate_limit(dsns):
     headers = login(c, "asha")
     assert c.post("/v1/ask", json={"message": "what counts as a SEV1?"}, headers=headers).status_code == 200
     assert c.post("/v1/ask", json={"message": "what counts as a SEV1?"}, headers=headers).status_code == 429
+
+
+def test_replicas_starting_together_migrate_without_errors():
+    """Several copies start at once on a fresh database (the first kind deploy restarted pods
+    2-3 times on this race). With the advisory lock in migrate() they take turns."""
+    import threading
+
+    from fieldcopilot.api.db import migrate
+
+    name = "fieldcopilot_race"
+    base = ADMIN_SERVER.rsplit("/", 1)[0]
+    errors: list[str] = []
+    try:
+        for _ in range(4):
+            with psycopg.connect(ADMIN_SERVER, autocommit=True) as conn:
+                conn.execute(f"DROP DATABASE IF EXISTS {name} WITH (FORCE)")
+                conn.execute(f"CREATE DATABASE {name}")
+            start = threading.Barrier(6)
+
+            def replica():
+                start.wait()
+                try:
+                    migrate(f"{base}/{name}")
+                except psycopg.Error as error:
+                    errors.append(f"{type(error).__name__}: {error}".splitlines()[0])
+
+            threads = [threading.Thread(target=replica) for _ in range(6)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+    finally:
+        with psycopg.connect(ADMIN_SERVER, autocommit=True) as conn:
+            conn.execute(f"DROP DATABASE IF EXISTS {name} WITH (FORCE)")
+    assert errors == []

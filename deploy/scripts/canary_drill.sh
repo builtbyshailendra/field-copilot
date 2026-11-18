@@ -10,7 +10,11 @@ NS=copilot
 REL=demo
 ROLLOUTS_VERSION=v1.7.2
 CHART=deploy/helm/field-copilot
-COMMON=(--set rollouts.enabled=true --set api.replicas=2
+# --server-side=false: Argo Rollouts rewrites the api Services' selectors to pin stable and
+# canary pods. Helm 4 defaults new releases to server-side apply, which then refuses to
+# upgrade ("conflict with rollouts-controller: .spec.selector"). Client-side apply only
+# patches what changed in the chart, as Helm 3 did, and leaves those selectors alone.
+COMMON=(--server-side=false --set rollouts.enabled=true --set api.replicas=2
         --set image.api.repository=field-copilot-api --set image.api.tag=ci --set image.api.pullPolicy=Never
         --set image.web.repository=field-copilot-web --set image.web.tag=ci --set image.web.pullPolicy=Never)
 

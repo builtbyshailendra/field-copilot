@@ -70,8 +70,19 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {role};
 """
 
 
+MIGRATE_LOCK = 0x66636F70  # "fcop": one advisory-lock key for every copy of the app
+
+
 def migrate(admin_dsn: str, app_role: str = "copilot_app", app_password: str | None = None) -> None:
+    """Create or update the schema. Safe to run from many replicas at once.
+
+    Without the lock, replicas starting together race on CREATE TABLE IF NOT EXISTS and
+    lose with "duplicate key value violates unique constraint pg_type_typname_nsp_index"
+    (seen on the first kind deploy: API and worker pods restarted 2-3 times each).
+    The session-level lock makes them take turns; closing the connection releases it.
+    """
     with psycopg.connect(admin_dsn, autocommit=True) as conn:
+        conn.execute("SELECT pg_advisory_lock(%s)", (MIGRATE_LOCK,))
         conn.execute(SCHEMA)
         for table in TABLES:
             conn.execute(RLS.format(t=table))

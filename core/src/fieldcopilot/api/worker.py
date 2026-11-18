@@ -10,6 +10,8 @@ from __future__ import annotations
 import os
 import time
 
+import psycopg
+
 from fieldcopilot.api.db import Database
 from fieldcopilot.api.stores import Audit, Jobs
 from fieldcopilot.packs import all_packs
@@ -46,7 +48,13 @@ def run_once(db: Database) -> int:
 def main() -> None:  # pragma: no cover - long-running loop
     db = Database(os.environ.get("FIELD_APP_DSN", "postgresql://copilot_app:copilot-app-dev@127.0.0.1:5433/fieldcopilot"))
     while True:
-        if run_once(db) == 0:
+        try:
+            done = run_once(db)
+        except psycopg.Error as error:
+            # The API creates the app role and tables; until it has, wait instead of crash-looping.
+            print(f"worker: database not ready ({type(error).__name__}), retrying in 2 s", flush=True)
+            done = 0
+        if done == 0:
             time.sleep(2.0)
 
 

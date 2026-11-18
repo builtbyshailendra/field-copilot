@@ -307,6 +307,15 @@ The delivery pack, written the way it would be handed to a sponsor and their sec
 
 Found while writing the runbook: guardrail flags (possible injection, secrets redacted, cache outcome) reached the user but weren't stored with the run. Runs now keep them, with an idempotent migration and an API test.
 
+### Publishing day: what the first CI runs on GitHub found (18 Nov)
+Until now the workflows had never run. Most jobs passed first time: platform tests, API tests on PostgreSQL with row-level security, Playwright, pgvector, the kind failure lab, chart lint and render, `terraform test`, the Kyverno policy tests and the k6 load test. What broke:
+- **The security scan never started:** `aquasecurity/trivy-action@0.28.0` no longer resolves, because the action's tags are now `v`-prefixed. It's pinned to the commit behind v0.36.0 instead of a tag. Then pip-audit flagged only the audit venv's own bundled pip 25.0.1, so the job upgrades pip first. The project's dependencies had no findings.
+- **The canary drill hit three problems a laptop without Docker couldn't show:**
+  1. `helm --wait` never saw the Argo Rollout as ready ("status: Unknown"). Helm 4 checks readiness with kstatus, which expects a numeric `status.observedGeneration`; Argo Rollouts stores a string. The drill now waits for the Deployments with kubectl and for the Rollout's own `Healthy` phase.
+  2. Upgrading to the broken build failed with "conflict with rollouts-controller: .spec.selector". Argo Rollouts rewrites the api Services' selectors, and Helm 4 defaults new releases to server-side apply. The drill passes `--server-side=false`, so Helm only patches what changed in the chart, as Helm 3 did. **Anyone installing this chart with Helm 4 and `rollouts.enabled` needs the same flag.** Argo CD applies client-side by default, so the ApplicationSet is unaffected.
+  3. API and worker pods restarted 2–3 times on their first start. Replicas raced on `CREATE TABLE IF NOT EXISTS` ("duplicate key value violates unique constraint pg_type_typname_nsp_index"), and the worker connected before the app role existed. `migrate()` now takes a PostgreSQL advisory lock, and the worker waits for the database instead of crashing. A new test starts 6 migrations at once on a fresh database, 4 times over: without the lock 19 of 24 failed, with it none do.
+- **First numbers from CI** (fake model, 1 s per model call, 241 requests each way): answer-model calls **197 with the cache off vs 30 with it on**, median **2.04 s → 1.04 s**, 0 near-misses served from the cache, 0 failed requests. p95 rose (2.4 s → 11.1 s), most likely because the random question mix sent more investigations to the cache-on run (160 vs 100 investigation model calls), and investigations are never cached. On kind, the healthy build's self-check scored 0.83, the same as locally.
+
 ## Licence
 
 MIT
