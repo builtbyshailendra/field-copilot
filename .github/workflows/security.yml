@@ -21,6 +21,7 @@ jobs:
       - name: Python dependencies (pip-audit against the resolved install)
         run: |
           python -m venv /tmp/audit
+          /tmp/audit/bin/python -m pip install -q --upgrade pip   # the venv's bundled pip is itself flagged
           /tmp/audit/bin/pip install -q -e "core[rag,agents,api]" pip-audit
           /tmp/audit/bin/pip-audit --skip-editable --progress-spinner off
       - name: Web dependencies, secrets and IaC/Dockerfile misconfigurations (Trivy)

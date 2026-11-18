@@ -14,13 +14,24 @@ COMMON=(--set rollouts.enabled=true --set api.replicas=2
         --set image.api.repository=field-copilot-api --set image.api.tag=ci --set image.api.pullPolicy=Never
         --set image.web.repository=field-copilot-web --set image.web.tag=ci --set image.web.pullPolicy=Never)
 
+# On any failure, print enough cluster state to diagnose it from the CI log.
+dump() {
+  echo "== cluster state at failure"
+  kubectl -n "$NS" get rollout,rs,pods,analysisrun -o wide || true
+  kubectl -n "$NS" get events --sort-by=.lastTimestamp | tail -40 || true
+  for p in $(kubectl -n "$NS" get pods -o name 2>/dev/null); do
+    echo "-- logs $p"; kubectl -n "$NS" logs "$p" --all-containers --tail=40 || true
+  done
+}
+trap 'rc=$?; if [ "$rc" -ne 0 ]; then dump; fi; exit "$rc"' EXIT
+
 kubectl create namespace argo-rollouts --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n argo-rollouts -f "https://github.com/argoproj/argo-rollouts/releases/download/${ROLLOUTS_VERSION}/install.yaml"
 kubectl -n argo-rollouts rollout status deploy/argo-rollouts --timeout=180s
 
 wait_phase() {
   local want=$1 phase=""
-  for _ in $(seq 1 100); do
+  for _ in $(seq 1 150); do
     phase=$(kubectl -n "$NS" get rollout "$REL-api" -o jsonpath='{.status.phase}' 2>/dev/null || true)
     [ "$phase" = "$want" ] && { echo "rollout is $phase"; return 0; }
     sleep 4
@@ -58,7 +69,11 @@ wait_promoted() {
 }
 
 echo "== 1. install"
-helm upgrade --install "$REL" "$CHART" -n "$NS" --create-namespace "${COMMON[@]}" --wait --timeout 8m
+# No helm --wait: newer Helm judges readiness with kstatus, which expects a numeric
+# status.observedGeneration; Argo Rollouts stores a string, so the Rollout stays "Unknown"
+# forever. Wait for the Deployments here and for the Rollout's own phase below.
+helm upgrade --install "$REL" "$CHART" -n "$NS" --create-namespace "${COMMON[@]}"
+for d in postgres web worker; do kubectl -n "$NS" rollout status "deploy/$REL-$d" --timeout=8m; done
 wait_phase Healthy
 smoke 0.75
 
